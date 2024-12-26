@@ -1,4 +1,4 @@
-import path from "path";
+import { join } from "path";
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
@@ -9,11 +9,14 @@ export class ConfigLoader {
     private config: Config;
     private static instance: ConfigLoader;
 
+    constructor() {
+        this.loadConfig();
+    }
 
     private loadConfig() {
         try {
             const configPath = process.env.CONFIG_PATH ||
-                path.join(process.cwd(), 'config', 'config.yaml');
+                join(process.cwd(), 'config.yaml');
 
             const fileContent = fs.readFileSync(configPath, 'utf8');
             this.config = yaml.load(fileContent);
@@ -44,9 +47,5 @@ export class ConfigLoader {
 
     public getWallets() {
         return this.config.wallets || [];
-    }
-
-    public reloadConfig() {
-        this.loadConfig();
     }
 }
