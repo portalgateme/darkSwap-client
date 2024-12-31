@@ -18,6 +18,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0x8D3d79b600433DA1EA3cC0dF7F2b086B7aBB6113',
     sablierLinearAssetManager: '0x06665db68b6F0157c6886860B158688D94124919',
     oTCSwapAssetManager: '0xB8096ecD7d3185b24AA218C509175185C11f13a9',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
     drakpoolSubgraphUrl:
       'https://subgraph.satsuma-prod.com/1c6a44a9ed6e/pgs-team--611591/singularity-subgraph/api',
     explorerUrl: {
@@ -41,6 +43,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0x1f58F7b50266599524620e7047425B1359F10bdd',
     sablierLinearAssetManager: '0xe397804A9Ff78329997A2b07aF91D484f78e77Be',
     oTCSwapAssetManager: '0xcbFA6BB3eb4Bd9BF97866baE75FfB62f3aE897c0',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
     drakpoolSubgraphUrl:
       'https://subgraph.satsuma-prod.com/1c6a44a9ed6e/pgs-team--611591/singularity-arb-subgraph/api',
     explorerUrl: {
@@ -64,6 +68,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0x0',
     sablierLinearAssetManager: '0x0',
     oTCSwapAssetManager: '0xAa5e02284d1Fd0f6C12AFBDABc28Ed5aC5a6474b',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
 
     drakpoolSubgraphUrl:
       'https://bb.subgraph.thesingularity.network/subgraphs/name/singularity/',
@@ -86,6 +92,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0xc98b275a309F187b691e025B956e03603e12b420',
     sablierLinearAssetManager: '0x4d459dDe25707CA353De15CC3B85b7C2e4bb380c',
     oTCSwapAssetManager: '0x3D76Fd85FCc2593970d22Aa34bcC4c5444c57c9D',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
 
     drakpoolSubgraphUrl: 'https://subgraph.satsuma-prod.com/1c6a44a9ed6e/pgs-team--611591/singularity-base-subgraph/api',
     explorerUrl: {
@@ -109,6 +117,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0x6c5Af867CB8950C92EC8F1e1382857Aa62e754F5',
     sablierLinearAssetManager: '0x992a5Ce5fF1573cBFe9712d4C500427828914645',
     oTCSwapAssetManager: '0x549f3bAD265A0383394E0ABEC7b67b4ff750d2ca',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
     drakpoolSubgraphUrl: '',
     explorerUrl: {
       tx: 'https://sepolia.etherscan.io/tx/',
@@ -129,6 +139,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0x0',
     sablierLinearAssetManager: '0x0',
     oTCSwapAssetManager: '0x0',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
     drakpoolSubgraphUrl: '',
     explorerUrl: {
       tx: 'https://testnet.bbscan.io/tx/',
@@ -149,6 +161,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: '0x0',
     sablierLinearAssetManager: '0x0',
     oTCSwapAssetManager: '0x9D4746F8f2364da04fF47d729072F71b742726aA',
+    batchJoinSplitAssetManager: '0x0',
+    darkPoolSwapAssetManager: '0x0',
     drakpoolSubgraphUrl: '',
     explorerUrl: {
       tx: 'https://testnet.emcscan.com/tx/',
@@ -169,6 +183,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: hardhatContracts.sablierDynamicAssetManager as HexData,
     sablierLinearAssetManager: hardhatContracts.sablierLinearAssetManager as HexData,
     oTCSwapAssetManager: hardhatContracts.oTCSwapAssetManager as HexData,
+    batchJoinSplitAssetManager: hardhatContracts.batchJoinSplitAssetManager as HexData,
+    darkPoolSwapAssetManager: hardhatContracts.darkPoolSwapAssetManager as HexData,
     drakpoolSubgraphUrl:
       'https://app.dev.portalgate.me:8080/subgraphs/name/singularity/',
     explorerUrl: {
@@ -190,6 +206,8 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierDynamicAssetManager: hardhatArbContracts.sablierDynamicAssetManager as HexData,
     sablierLinearAssetManager: hardhatArbContracts.sablierLinearAssetManager as HexData,
     oTCSwapAssetManager: hardhatArbContracts.oTCSwapAssetManager as HexData,
+    batchJoinSplitAssetManager: hardhatArbContracts.batchJoinSplitAssetManager as HexData,
+    darkPoolSwapAssetManager: hardhatArbContracts.darkPoolSwapAssetManager as HexData,
     drakpoolSubgraphUrl:
       'https://app.dev.portalgate.me:48080/subgraphs/name/singularityArb/',
     explorerUrl: {

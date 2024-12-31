@@ -24,5 +24,8 @@ export const hardhatArbContracts = {
     "uniswapSwapAssetManager": "0x3D7CD28EfD08FfE9Ce8cA329EC2e67822C756526",
     "sgETH": "0x8A14aFDa2dde0dAF55b0271Cb9Dc2376F40DeCdC",
     "sgUSDC": "0xc3d6be0415e8257fE8Cec8317A25d73C8C57c0A0",
-    "sgUSDT": "0x5e8bC075e088666F6D3CF6539A32B4c280Cdf4D8"
+    "sgUSDT": "0x5e8bC075e088666F6D3CF6539A32B4c280Cdf4D8",
+    "batchJoinSplitAssetManager": "0x0",
+    "darkPoolSwapAssetManager": "0x0",
+
 }

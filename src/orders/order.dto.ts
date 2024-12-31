@@ -1,6 +1,7 @@
 import { BaseDto } from '../common/dto/base.dto';
 
 export class orderDto extends BaseDto {
+    id: number;
     orderId: string;
     assetPairId: string;
     orderDirection: number;

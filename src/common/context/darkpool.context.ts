@@ -1,4 +1,4 @@
-import { DarkPool } from "@thesingularitynetwork/singularity-sdk"
+import { DarkPool,isAddressCompliant } from "@thesingularitynetwork/singularity-sdk"
 import { Signer } from "ethers"
 import { getDarkPool } from "src/utils/darkpool"
 import RpcManager from "src/utils/rpcManager"
@@ -23,6 +23,10 @@ export class DarkpoolContext {
     static async createDarkpoolContext(chain: number, wallet: string) {
         const [signer, pubKey] = RpcManager.getInstance().getSignerAndPublicKey(wallet, chain)
         const darkPool = getDarkPool(chain, signer)
+
+        if (!isAddressCompliant(wallet,darkPool)) {
+            throw new Error("Wallet is not compliant")
+        }
 
         const domain = {
             name: "SingularityDarkpoolClientServer",

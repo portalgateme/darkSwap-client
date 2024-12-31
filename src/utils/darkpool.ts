@@ -25,6 +25,8 @@ export function getDarkPool(chainId: number, signer: Signer) {
             ethAddress: networkConfig[chainId].ethAddress,
             nativeWrapper: networkConfig[chainId].nativeWrapper,
             drakpoolSubgraphUrl: networkConfig[chainId].drakpoolSubgraphUrl,
+            batchJoinSplitAssetManager: networkConfig[chainId].batchJoinSplitAssetManager,
+            darkpoolSwapAssetManager: networkConfig[chainId].darkPoolSwapAssetManager,
         },
         stakingTokenConfig[chainId]
     )

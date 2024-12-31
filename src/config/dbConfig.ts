@@ -6,25 +6,28 @@ export default{
         //type: 0: note, 1: partial note
         `CREATE TABLE IF NOT EXISTS NOTES (
             id INTEGER PRIMARY KEY AUTOINCREMENT, 
-            chain_id INTERGER NOT NULL, 
-            public_key TEXT NOT NULL, 
-            wallet_address TEXT NOT NULL,
+            chain INTERGER NOT NULL, 
+            publicKey TEXT NOT NULL, 
+            wallet TEXT NOT NULL,
             type  INTERGER NOT NULL,
             note_commitment TEXT NOT NULL, 
             rho TEXT NOT NULL, 
             asset TEXT NOT NULL, 
             amount NUMERIC NOT NULL
             status INTEGER NOT NULL
-            tx_hash_created TEXT,
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON INSERT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE
+            txHashCreated TEXT,
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON INSERT,
+            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE
             );`,
             
         `CREATE TABLE IF NOT EXISTS ASSETS_PAIR (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            asset_a TEXT NOT NULL, 
-            asset_b TEXT NOT NULL, 
-            chain_id INTERGER NOT NULL);`,
+            assetA TEXT NOT NULL, 
+            assetB TEXT NOT NULL, 
+            chain INTERGER NOT NULL
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON INSERT,
+            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE
+            );`,
 
         //order_direction: 0: buy, 1: sell
         //order_type: 0: market, 1: limit, 2: stop loss, 3: stop loss limit, 4: take profit, 5: take profit limit, 6: limit maker
@@ -44,22 +47,22 @@ export default{
     
         `CREATE TABLE IF NOT EXISTS ORDERS (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
-            order_id TEXT NOT NULL,
-            chain_id INTERGER NOT NULL, 
-            asset_pair_id TEXT NOT NULL,
-            order_direction INTERGER NOT NULL,
-            order_type INTERGER NOT NULL,
-            time_in_force INTERGER NOT NULL,
-            stp_mode INTERGER NOT NULL,
+            orderId TEXT NOT NULL,
+            chain INTERGER NOT NULL, 
+            assetPairId TEXT NOT NULL,
+            orderDirection INTERGER NOT NULL,
+            orderType INTERGER NOT NULL,
+            timeInForce INTERGER NOT NULL,
+            stpMode INTERGER NOT NULL,
             price TEXT NOT NULL,
             amount TEXT NOT NULL,
-            partial_amount TEXT NOT NULL,
+            partialAmount TEXT NOT NULL,
             status INTERGER NOT NULL,
             wallet TEXT NOT NULL,
-            public_key TEXT NOT NULL,
-            note_id INTERGER NOT NULL,
+            publicKey TEXT NOT NULL,
+            noteId INTERGER NOT NULL,
             signature TEXT NOT NULL
-            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON INSERT,
-            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE);`,
+            createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON INSERT,
+            updatedAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE);`,
     ]
 }

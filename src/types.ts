@@ -32,6 +32,8 @@ export type NetworkConfig = {
     sablierDynamicAssetManager: HexData
     sablierLinearAssetManager: HexData
     oTCSwapAssetManager: HexData
+    batchJoinSplitAssetManager: HexData
+    darkPoolSwapAssetManager: HexData
 
     explorerUrl: {
         tx: string
