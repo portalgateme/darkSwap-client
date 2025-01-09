@@ -1,24 +1,22 @@
-import { ChainId, RelayerInfo } from "src/types";
+import { ChainId, HexData, RelayerInfo } from "src/types";
+import { ConfigLoader } from "src/utils/configUtil";
 
 const parseEnvRelayerConfig = () => {
   const customConfig: { [chainId: number]: RelayerInfo[] } = {};
   
-  Object.values(ChainId).forEach(chainId => {
-    if (typeof chainId === 'number') {
-      const envKey = `RELAYER_CONFIG_${chainId}`;
-      const envValue = process.env[envKey];
-      
-      if (envValue) {
-        try {
-          const relayers = JSON.parse(envValue) as RelayerInfo[];
-          customConfig[chainId] = relayers;
-        } catch (error) {
-          console.warn(`Invalid relayer config for chain ${chainId}: ${error}`);
-        }
-      }
+  const relayers = ConfigLoader.getInstance().getConfig().relayers;
+
+  relayers.forEach((relayer: { chainId: number, relayerName: string, relayerAddress: string, hostUrl: string }) => {
+    if (!customConfig[relayer.chainId]) {
+      customConfig[relayer.chainId] = [];
     }
+    customConfig[relayer.chainId].push({
+      relayerName: relayer.relayerName,
+      relayerAddress: relayer.relayerAddress as HexData,
+      hostUrl: relayer.hostUrl,
+    });
   });
-  
+
   return customConfig;
 };
 
