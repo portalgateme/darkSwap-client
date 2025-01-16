@@ -32,7 +32,7 @@ async function bootstrap() {
 
   await assetPairService.syncAssetPairs();
 
-  await app.listen(3000);
+  await app.listen(3002);
   startWebSocket();
 }
 
@@ -42,45 +42,57 @@ function startWebSocket() {
   if (!booknodeUrl) {
     throw new Error('BOOKNODE_URL is not set');
   }
-  const ws = new WebSocket(booknodeUrl);
 
-  ws.on('open', () => {
-    console.log('Connected to BookNode server');
-  });
+  let ws: WebSocket;
 
-  ws.on('error', (error) => {
-    console.error('WebSocket error:', error);
-  });
+  const connect = () => {
+    ws = new WebSocket(booknodeUrl);
 
-  ws.on('close', () => {
-    console.log('Disconnected from BookNode server');
-  });
+    ws.on('open', () => {
+      console.log('Connected to BookNode server');
+    });
 
-  ws.on('message', async (data) => {
-    try{
-      const settlementService = SettlementService.getInstance();
-      const assetPairService = AssetPairService.getInstance();
-      const notificationEvent = JSON.parse(data.toString());
-      switch (notificationEvent.eventType) {
-        case 1:
-          await settlementService.takerSwap(notificationEvent.orderId);
-          break;
-        case 2:
-          await settlementService.makerSwap(notificationEvent.orderId);
-          break;
-        case 3:
-          await assetPairService.syncAssetPair(notificationEvent.assetPairId);
-          break;
-        default:
-          console.log('Unknown event:', notificationEvent);
-          break;
+    ws.on('error', (error) => {
+      console.error('WebSocket error:', error);
+      reconnect();
+    });
+
+    ws.on('close', () => {
+      console.log('Disconnected from BookNode server');
+      reconnect();
+    });
+
+    ws.on('message', async (data) => {
+      try {
+        const settlementService = SettlementService.getInstance();
+        const assetPairService = AssetPairService.getInstance();
+        const notificationEvent = JSON.parse(data.toString());
+        switch (notificationEvent.eventType) {
+          case 1:
+            await settlementService.takerSwap(notificationEvent.orderId);
+            break;
+          case 2:
+            await settlementService.makerSwap(notificationEvent.orderId);
+            break;
+          case 3:
+            await assetPairService.syncAssetPair(notificationEvent.assetPairId);
+            break;
+          default:
+            console.log('Unknown event:', notificationEvent);
+            break;
+        }
+      } catch (error) {
+        console.error('Invalid message:', data.toString());
       }
-    } catch (error) {
-      console.error('Invalid message:', data.toString());
-    }
-    // Handle incoming messages
-  });
+    });
+  };
 
+  const reconnect = () => {
+    console.log('Attempting to reconnect...');
+    setTimeout(connect, 5000); 
+  };
+
+  connect();
 }
 
 bootstrap();

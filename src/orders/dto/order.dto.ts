@@ -31,13 +31,13 @@ export class OrderDto extends BaseDto {
     price: string;
     @ApiProperty()
     @IsNotEmpty()
-    amountOut: bigint;
+    amountOut: number;
     @ApiProperty()
     @IsNotEmpty()
-    amountIn: bigint;
+    amountIn: number;
     @ApiProperty() 
     @IsOptional()
-    partialAmountIn?: bigint;
+    partialAmountIn?: number;
     status?: number;
     publicKey?: string;
     noteCommitment?: bigint;

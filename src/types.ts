@@ -47,3 +47,9 @@ export type RelayerInfo = {
     relayerAddress: HexData
     hostUrl: string
 }
+
+
+export enum OrderDirection {
+    BUY = 0,
+    SELL = 1
+}

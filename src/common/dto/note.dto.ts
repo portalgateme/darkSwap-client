@@ -3,7 +3,7 @@ import { BaseDto } from './base.dto';
 export class NoteDto extends BaseDto {
     id: number;
     publicKey: string;
-    type: string;
+    type: number;
     noteCommitment: bigint;
     rho: bigint;
     asset: string;

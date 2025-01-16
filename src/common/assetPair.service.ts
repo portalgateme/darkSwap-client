@@ -21,15 +21,16 @@ export class AssetPairService {
     }
 
     async syncAssetPairs() {
-        const result = 
-            await axios.get(`${this.configLoader.getConfig().bookNodeApiUrl}/assetPair/getAssetPairs`,{
+        const result =
+            await axios.get(`${this.configLoader.getConfig().bookNodeApiUrl}/api/trading-pairs`, {
                 headers: {
                     'Content-Type': 'application/json',
                     'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
                 }
             });
-            
-            const assetPairs = result.data as AssetPairDto[];
+
+        if (result.status == 200 && result.data.code == 200 && result.data.data) {
+            const assetPairs = result.data.data as AssetPairDto[];
             for (const assetPair of assetPairs) {
                 const assetPairDb = await this.dbService.getAssetPairById(assetPair.id);
                 if (!assetPairDb) {
@@ -37,9 +38,10 @@ export class AssetPairService {
                 }
             }
         }
+    }
 
     async syncAssetPair(assetPairId: string) {
-        const result = await axios.get(`${this.configLoader.getConfig().bookNodeApiUrl}/assetPair/getAssetPair/${assetPairId}`,{
+        const result = await axios.get(`${this.configLoader.getConfig().bookNodeApiUrl}/assetPair/getAssetPair/${assetPairId}`, {
             headers: {
                 'Content-Type': 'application/json',
                 'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`

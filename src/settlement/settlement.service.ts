@@ -44,7 +44,7 @@ export class SettlementService {
     settlementDto.wallet = orderInfo.wallet;
     settlementDto.chainId = orderInfo.chainId;
 
-    const result = await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/order/getOrderMatchDetails`, settlementDto,{
+    const result = await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/api/orders/matchdetails`, settlementDto,{
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
@@ -78,7 +78,7 @@ export class SettlementService {
     //send settle info to booknode
     settlementDto.txHashSettled = tx;
 
-    await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/order/settle`, settlementDto,{
+    await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/api/orders/settle`, settlementDto,{
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
@@ -105,7 +105,7 @@ export class SettlementService {
     settlementDto.wallet = orderInfo.wallet;
     settlementDto.chainId = orderInfo.chainId;
 
-    const result = await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/order/getOrderMatchDetails`, settlementDto,{
+    const result = await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/api/orders/matchdetails`, settlementDto,{
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
@@ -145,7 +145,7 @@ export class SettlementService {
       swapMessage: takerSwapMessage
     } as TakerConfirmDto;
 
-    await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/order/confirm`, takerConfirmDto,{
+    await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/api/orders/confirm`, takerConfirmDto,{
       headers: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
