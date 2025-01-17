@@ -10,7 +10,7 @@ import { ConfigLoader } from 'src/utils/configUtil';
 import { v4 } from 'uuid';
 import axios from 'axios';
 import { AssetPairDto } from 'src/common/dto/assetPair.dto';
-import { OrderDirection } from 'src/types';
+import { NoteStatus, OrderDirection } from 'src/types';
 
 interface BookNodeCreateOrderDto {
   chainId: number;
@@ -52,28 +52,20 @@ export class OrderService {
 
     const assetPair = await this.dbService.getAssetPairById(orderDto.assetPairId, orderDto.chainId);
     const outAsset = orderDto.orderDirection === OrderDirection.BUY ? assetPair.quoteAddress : assetPair.baseAddress;
-    const notes = await this.dbService.getNotesByAsset(outAsset, darkPoolContext.chainId);
-    const notesToProcess: Note[] = notes.map(note => {
-      return {
-        note: note.noteCommitment,
-        rho: note.rho,
-        asset: note.asset,
-        amount: note.amount
-      } as Note;
-    });
 
-    const noteForOrder = await this.noteBatchJoinSplitService.notesJoinSplit(notesToProcess, darkPoolContext, orderDto.amountOut);
+    const noteForOrder = await this.noteBatchJoinSplitService.getNoteOfAssetAmount(darkPoolContext, outAsset, BigInt(orderDto.amountOut));
     if (!noteForOrder) {
-      throw new Error('No notes to process');
+      throw new Error('Asset not enough');
     }
     const { context } = await createMakerOrderService.prepare(noteForOrder, darkPoolContext.signature);
     await createMakerOrderService.generateProof(context);
     const tx = await createMakerOrderService.execute(context);
+    this.dbService.updateNoteLockedByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, noteForOrder.note);
     if (!orderDto.orderId) {
       orderDto.orderId = v4();
     }
-    orderDto.status = 0;
-    orderDto.noteCommitment = noteForOrder.note;
+    orderDto.status = NoteStatus.ACTIVE;
+    orderDto.noteCommitment = noteForOrder.note.toString();
     orderDto.nullifier = context.proof.outNullifier;
     orderDto.txHashCreated = tx;
     orderDto.publicKey = darkPoolContext.publicKey;

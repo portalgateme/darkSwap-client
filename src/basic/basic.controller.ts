@@ -14,7 +14,7 @@ export class BasicController {
   async deposit(@Body() depositDto: DepositDto) {
     const context = await DarkpoolContext.createDarkpoolContext(depositDto.chainId, depositDto.wallet)
     const token = await TokenService.getTokenByChainId(depositDto.chainId, depositDto.asset);
-    await this.basicService.deposit(context, token, depositDto.amount);
+    await this.basicService.deposit(context, token, BigInt(depositDto.amount));
     return { message: 'success' };
   }
 
@@ -22,12 +22,12 @@ export class BasicController {
   async withdraw(@Body() withdrawDto: WithdrawDto) {
     const context = await DarkpoolContext.createDarkpoolContext(withdrawDto.chainId, withdrawDto.wallet)
     const token = await TokenService.getTokenByChainId(withdrawDto.chainId, withdrawDto.asset);
-    await this.basicService.withdraw(context, token, withdrawDto.amount, withdrawDto.receiptAddress);
+    await this.basicService.withdraw(context, token, BigInt(withdrawDto.amount), withdrawDto.receiptAddress);
     return { message: 'success' };
   }
 
   @Get('syncNoteStatus')
   async syncNoteStatus() {
-    return this.basicService.syncNoteStatus();
+    // return this.basicService.syncNoteStatus();
   }
 }

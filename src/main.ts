@@ -51,6 +51,12 @@ function startWebSocket() {
 
     ws.on('open', () => {
       console.log('Connected to BookNode server');
+      const authMessage = JSON.stringify({
+        type: 'auth',
+        token: ConfigLoader.getInstance().getConfig().bookNodeApiKey
+      });
+
+      ws.send(authMessage);
     });
 
     ws.on('error', (error) => {
@@ -90,7 +96,7 @@ function startWebSocket() {
 
   const reconnect = () => {
     console.log('Attempting to reconnect...');
-    setTimeout(connect, 5000);
+    setTimeout(connect, 10000);
   };
 
   connect();

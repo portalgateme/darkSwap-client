@@ -4,6 +4,7 @@ import { NoteDto } from '../dto/note.dto';
 import { AssetPairDto } from '../dto/assetPair.dto';
 import { OrderDto } from '../../orders/dto/order.dto';
 import { ConfigLoader } from 'src/utils/configUtil';
+import { NoteStatus } from 'src/types';
 
 interface NoteEntity {
   id: number;
@@ -11,7 +12,7 @@ interface NoteEntity {
   publicKey: string;
   wallet: string;
   type: number;
-  note_commitment: string;
+  noteCommitment: string;
   rho: string;
   asset: string;
   amount: string;
@@ -54,10 +55,10 @@ export class DatabaseService {
     rho: bigint,
     asset: string,
     amount: bigint,
-    status: number,
     txHashCreated: string): Promise<number> {
     const query = `INSERT INTO NOTES (
-      chainId, publicKey, wallet, type, note_commitment, rho, asset, amount, status, txHashCreated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      chainId, publicKey, wallet, type, noteCommitment, 
+      rho, asset, amount, status, txHashCreated) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const stmt = this.db.prepare(query);
     const result = stmt.run(
       chainId, 
@@ -68,7 +69,7 @@ export class DatabaseService {
       rho.toString(), 
       asset.toLowerCase(), 
       amount.toString(), 
-      status, 
+      NoteStatus.CREATED, 
       txHashCreated);
     return Number(result.lastInsertRowid);
   }
@@ -76,7 +77,7 @@ export class DatabaseService {
   public async getNotesByWallet(walletAddress: string): Promise<NoteDto[]> {
     const query = `SELECT * FROM NOTES WHERE wallet = ?`;
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(walletAddress) as NoteEntity[];
+    const rows = stmt.all(walletAddress.toLowerCase()) as NoteEntity[];
 
     const notes = rows.map(row => ({
       id: row.id,
@@ -84,7 +85,7 @@ export class DatabaseService {
       publicKey: row.publicKey,
       wallet: row.wallet,
       type: row.type,
-      noteCommitment: BigInt(row.note_commitment),
+      noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
       amount: BigInt(row.amount),
@@ -96,9 +97,9 @@ export class DatabaseService {
   }
 
   public async getNotesByAsset(asset: string, chainId: number): Promise<NoteDto[]> {
-    const query = `SELECT * FROM NOTES WHERE asset = ? AND chainId = ? AND status = 0 ORDER BY amount DESC`;
+    const query = `SELECT * FROM NOTES WHERE asset = ? AND chainId = ? AND status = ? ORDER BY amount DESC`;
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(asset.toLowerCase(), chainId) as NoteEntity[];
+    const rows = stmt.all(asset.toLowerCase(), chainId, NoteStatus.ACTIVE) as NoteEntity[];
 
     const notes = rows.map(row => ({
       id: row.id,
@@ -106,7 +107,7 @@ export class DatabaseService {
       publicKey: row.publicKey,
       wallet: row.wallet,
       type: row.type,
-      noteCommitment: BigInt(row.note_commitment),
+      noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
       amount: BigInt(row.amount),
@@ -127,7 +128,7 @@ export class DatabaseService {
       publicKey: row.publicKey,
       wallet: row.wallet,
       type: row.type,
-      noteCommitment: BigInt(row.note_commitment),
+      noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
       amount: BigInt(row.amount),
@@ -147,7 +148,7 @@ export class DatabaseService {
       publicKey: row.publicKey,
       wallet: row.wallet,
       type: row.type,
-      noteCommitment: BigInt(row.note_commitment),
+      noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
       amount: BigInt(row.amount),
@@ -168,7 +169,7 @@ export class DatabaseService {
       publicKey: row.publicKey,
       wallet: row.wallet,
       type: row.type,
-      noteCommitment: BigInt(row.note_commitment),
+      noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
       amount: BigInt(row.amount),
@@ -179,17 +180,30 @@ export class DatabaseService {
     return notes;
   }
 
-
-  public async updateNoteStatus(id: number, status: number) {
-    const query = `UPDATE NOTES SET status = ? WHERE id = ?`;
-    const stmt = this.db.prepare(query);
-    stmt.run(status, id);
-  }
-
   public updateNoteTransactionAndStatus(id: number, txHash: string) {
     const query = `UPDATE NOTES SET txHashCreated = ?, status = 0 WHERE id = ?`;
     const stmt = this.db.prepare(query);
     stmt.run(txHash, id);
+  }
+
+  private async updateNoteStatus(wallet: string, chainId: number, noteCommitment: bigint, status: number) {
+    const query = `UPDATE NOTES SET status = ? WHERE wallet = ? AND chainId = ? AND noteCommitment = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(status, wallet.toLowerCase(), chainId, noteCommitment.toString());
+  }
+
+  public async updateNoteTransactionByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint, txHash: string) {
+    const query = `UPDATE NOTES SET txHashCreated = ?, status = ? WHERE wallet = ? AND chainId = ? AND noteCommitment = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(txHash, NoteStatus.ACTIVE, wallet.toLowerCase(), chainId, noteCommitment.toString());
+  }
+
+  public updateNoteSpentByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
+    this.updateNoteStatus(wallet, chainId, noteCommitment, NoteStatus.SPENT);
+  }
+
+  public updateNoteLockedByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
+    this.updateNoteStatus(wallet, chainId, noteCommitment, NoteStatus.LOCKED);
   }
 
   // Asset pair operations

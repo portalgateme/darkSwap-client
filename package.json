@@ -16,7 +16,7 @@
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/swagger": "^8.1.0",
     "@thesingularitynetwork/darkpool-v1-proof": "^0.2.32",
-    "@thesingularitynetwork/singularity-sdk": "^0.0.22",
+    "@thesingularitynetwork/singularity-sdk": "^0.0.24",
     "better-sqlite3": "^11.8.0",
     "class-validator": "^0.14.1",
     "ethers": "^6.13.4",
@@ -44,5 +44,6 @@
     "ts-loader": "^9.0.0",
     "ts-node": "^10.0.0",
     "typescript": "^5.0.0"
-  }
+  },
+  "packageManager": "yarn@1.22.21+sha1.1959a18351b811cdeedbd484a8f86c3cc3bbaf72"
 }

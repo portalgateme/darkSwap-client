@@ -14,5 +14,5 @@ export class DepositDto extends BaseDto {
   })
   @IsBigIntString()
   @IsNotEmpty()
-  amount: bigint;
+  amount: string;
 }

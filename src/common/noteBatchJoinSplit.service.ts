@@ -1,8 +1,7 @@
+import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
 import { BatchJoinSplitService, SplitService } from '@thesingularitynetwork/singularity-sdk';
 import { DarkpoolContext } from './context/darkpool.context';
 import { DatabaseService } from './db/database.service';
-import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
-import { NoteStatus } from 'src/types';
 
 export class NoteBatchJoinSplitService {
   private static instance: NoteBatchJoinSplitService;
@@ -19,6 +18,76 @@ export class NoteBatchJoinSplitService {
     return NoteBatchJoinSplitService.instance;
   }
 
+  private async doSplit(note: Note, darkPoolContext: DarkpoolContext, amount: bigint): Promise<Note> | null {
+    const splitservice = new SplitService(darkPoolContext.darkPool);
+    const { context: splitContext, outNotes } = await splitservice.prepare(note, amount, darkPoolContext.signature);
+    for (const outNote of outNotes) {
+      this.dbService.addNote(
+        darkPoolContext.chainId,
+        darkPoolContext.publicKey,
+        darkPoolContext.walletAddress,
+        0,
+        outNote.note,
+        outNote.rho,
+        outNote.asset,
+        outNote.amount,
+        '');
+    }
+    await splitservice.generateProof(splitContext);
+    const tx = await splitservice.execute(splitContext);
+
+    this.dbService.updateNoteSpentByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, note.note);
+
+    for (const outNote of outNotes) {
+      this.dbService.updateNoteTransactionByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, outNote.note, tx);
+    }
+    return outNotes[0];
+  }
+
+  private async doBatchJoinSplit(notesToJoin: Note[], darkPoolContext: DarkpoolContext, amount: bigint): Promise<Note> | null {
+    const batchJoinSplitService = new BatchJoinSplitService(darkPoolContext.darkPool);
+    const { context, outNotes } = await batchJoinSplitService.prepare(notesToJoin, amount, darkPoolContext.signature);
+
+    for (const outNote of outNotes) {
+      await this.dbService.addNote(
+        darkPoolContext.chainId,
+        darkPoolContext.publicKey,
+        darkPoolContext.walletAddress,
+        0,
+        outNote.note,
+        outNote.rho,
+        outNote.asset,
+        outNote.amount,
+        '');
+    }
+
+    await batchJoinSplitService.generateProof(context);
+    const tx = await batchJoinSplitService.execute(context);
+    for (const note of notesToJoin) {
+      this.dbService.updateNoteSpentByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, note.note);
+    }
+
+    for (const outNote of outNotes) {
+      this.dbService.updateNoteTransactionByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, outNote.note, tx);
+    }
+
+    return outNotes[0];
+  }
+
+  async getNoteOfAssetAmount(darkPoolContext: DarkpoolContext, asset: string, amount: bigint): Promise<Note> | null {
+    const notes = await this.dbService.getNotesByAsset(asset, darkPoolContext.chainId);
+    const notesToProcess: Note[] = notes.map(note => {
+      return {
+        note: note.noteCommitment,
+        rho: note.rho,
+        asset: note.asset,
+        amount: note.amount
+      } as Note;
+    });
+
+    return this.notesJoinSplit(notesToProcess, darkPoolContext, amount);
+  }
+
   async notesJoinSplit(notes: Note[], darkPoolContext: DarkpoolContext, amount: bigint): Promise<Note> | null {
     if (notes.length <= 0) {
       return null;
@@ -33,34 +102,9 @@ export class NoteBatchJoinSplitService {
         }
       }
 
-      const splitservice = new SplitService(darkPoolContext.darkPool);
-      const { context: splitContext, outNotes } = await splitservice.prepare(notes[0], amount, darkPoolContext.signature);
-      const ids: number[] = [];
-      for (let j = 0; j < outNotes.length; j++) {
-        ids[j] = await this.dbService.addNote(
-          darkPoolContext.chainId,
-          darkPoolContext.publicKey,
-          darkPoolContext.walletAddress,
-          0,
-          outNotes[j].note,
-          outNotes[j].rho,
-          outNotes[j].asset,
-          outNotes[j].amount,
-          NoteStatus.CREATED,
-          '');
-      }
-      await splitservice.generateProof(splitContext);
-      const tx = await splitservice.execute(splitContext);
-
-      for (let j = 0; j < outNotes.length; j++) {
-        console.log('tx', tx, ids[j]);
-
-        this.dbService.updateNoteTransactionAndStatus(ids[j], tx);
-      }
-      return outNotes[0];
+      return this.doSplit(notes[0], darkPoolContext, amount);
     } else {
 
-      const batchJoinSplitService = new BatchJoinSplitService(darkPoolContext.darkPool);
       let amountAccumulated = 0n;
       let i = 0;
 
@@ -79,52 +123,14 @@ export class NoteBatchJoinSplitService {
 
       if (i <= 5) {
         const notesToJoin = notes.slice(0, i + 1);
-        const { context, outNotes } = await batchJoinSplitService.prepare(notesToJoin, amount, darkPoolContext.signature);
-        const ids: number[] = [];
-
-        for (let j = 0; i < outNotes.length; j++) {
-          ids[j] = await this.dbService.addNote(
-            darkPoolContext.chainId,
-            darkPoolContext.publicKey,
-            darkPoolContext.walletAddress,
-            0,
-            outNotes[j].note,
-            outNotes[j].rho,
-            outNotes[j].asset,
-            outNotes[j].amount,
-            3,
-            '');
-        }
-
-        await batchJoinSplitService.generateProof(context);
-        const tx = await batchJoinSplitService.execute(context);
-        for (let j = 0; i < outNotes.length; j++) {
-          await this.dbService.updateNoteTransactionAndStatus(ids[j], tx);
-        }
-
-        return outNotes[0];
-
+        return this.doBatchJoinSplit(notesToJoin, darkPoolContext, amount);
       } else {
         const firstFive = notes.slice(0, 5);
         const theRest = notes.slice(5);
 
         const firstFiveAmount = firstFive.reduce((acc, note) => acc + note.amount, 0n);
-        const { context, outNotes } = await batchJoinSplitService.prepare(firstFive, firstFiveAmount, darkPoolContext.signature);
-        const id = await this.dbService.addNote(
-          darkPoolContext.chainId,
-          darkPoolContext.publicKey,
-          darkPoolContext.walletAddress,
-          0,
-          outNotes[0].note,
-          outNotes[0].rho,
-          outNotes[0].asset,
-          outNotes[0].amount,
-          NoteStatus.CREATED,
-          '');
-        await batchJoinSplitService.generateProof(context);
-        const tx = await batchJoinSplitService.execute(context);
-        await this.dbService.updateNoteTransactionAndStatus(id, tx);
-        const notesToProcess = [outNotes[0], ...theRest];
+        const firstFiveOutNote = await this.doBatchJoinSplit(firstFive, darkPoolContext, firstFiveAmount);
+        const notesToProcess = [firstFiveOutNote, ...theRest];
         return this.notesJoinSplit(notesToProcess, darkPoolContext, amount);
       }
     }

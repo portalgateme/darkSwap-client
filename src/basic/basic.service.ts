@@ -26,7 +26,7 @@ export class BasicService {
     const { context, outNotes } = await depositService.prepare(
       asset.address, BigInt(amount), darkPoolContext.walletAddress, darkPoolContext.signature);
 
-    const id = await this.dbService.addNote(
+    await this.dbService.addNote(
       darkPoolContext.chainId,
       darkPoolContext.publicKey,
       darkPoolContext.walletAddress,
@@ -35,11 +35,10 @@ export class BasicService {
       outNotes[0].rho,
       outNotes[0].asset,
       outNotes[0].amount,
-      NoteStatus.CREATED,
       '')
     await depositService.generateProof(context);
     const tx = await depositService.execute(context);
-    await this.dbService.updateNoteTransactionAndStatus(id, tx);
+    this.dbService.updateNoteTransactionByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, outNotes[0].note, tx);
     this.logger.log(`Deposit of ${amount} ${asset.symbol} for wallet ${darkPoolContext.walletAddress} completed with tx ${tx}`);
   }
 
@@ -52,26 +51,15 @@ export class BasicService {
 
     const withdrawService = new WithdrawService(darkPoolContext.darkPool);
 
-    const notes = await this.dbService.getNotesByAsset(asset.address, darkPoolContext.chainId);
-
-    const notesToProcess = notes.map(note => {
-      return {
-        note: note.noteCommitment,
-        rho: note.rho,
-        asset: note.asset,
-        amount: note.amount
-      } as Note;
-    });
-
-    const noteToWithdraw = await this.noteBatchJoinSplitService.notesJoinSplit(notesToProcess, darkPoolContext, amount);
+    const noteToWithdraw = await this.noteBatchJoinSplitService.getNoteOfAssetAmount(darkPoolContext, asset.address, amount);
     if (noteToWithdraw === null) {
       throw new Error("Insufficient funds");
     }
 
-    const { context: withdrawContext } = await withdrawService.prepare(
-      noteToWithdraw, receiptAddress, darkPoolContext.signature);
+    const { context: withdrawContext } = await withdrawService.prepare(noteToWithdraw, receiptAddress, darkPoolContext.signature);
     await withdrawService.generateProof(withdrawContext);
     await withdrawService.executeAndWaitForResult(withdrawContext);
+    this.dbService.updateNoteSpentByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, noteToWithdraw.note);
     this.logger.log(`Withdraw of ${amount} ${asset.symbol} for wallet ${darkPoolContext.walletAddress} completed with tx ${withdrawContext.tx}`);
   }
 }

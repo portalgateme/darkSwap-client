@@ -11,7 +11,7 @@ export default{
             publicKey TEXT NOT NULL, 
             wallet TEXT NOT NULL,
             type  INTERGER NOT NULL,
-            note_commitment TEXT NOT NULL, 
+            noteCommitment TEXT NOT NULL, 
             rho TEXT NOT NULL, 
             asset TEXT NOT NULL, 
             amount NUMERIC NOT NULL,
