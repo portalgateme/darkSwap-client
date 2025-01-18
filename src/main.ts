@@ -89,6 +89,7 @@ function startWebSocket() {
             break;
         }
       } catch (error) {
+        console.log(error.stack, error.message);
         console.error('Invalid message:', data.toString());
       }
     });

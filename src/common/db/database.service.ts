@@ -118,7 +118,7 @@ export class DatabaseService {
     return notes;
   }
 
-  public async getNoteByCommitment(noteCommitment: bigint): Promise<NoteDto> {
+  public async getNoteByCommitment(noteCommitment: string): Promise<NoteDto> {
     const query = `SELECT * FROM NOTES WHERE noteCommitment = ?`;
     const stmt = this.db.prepare(query);
     const row = stmt.get(noteCommitment) as NoteEntity;
@@ -296,7 +296,11 @@ export class DatabaseService {
       orderId, chainId, assetPairId, orderDirection, orderType, timeInForce, stpMode, price, amountOut, amountIn, partialAmountIn, status, wallet, publicKey, noteCommitment, nullifier, signature, txHashCreated)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
     const stmt = this.db.prepare(query);
-    await stmt.run(orderId, chainId, assetPairId, orderDirection, orderType, timeInForce, stpMode, price, amountOut, amountIn, partialAmountIn, status, wallet, publicKey, noteCommitment, nullifier, signature, txHashCreated);
+    stmt.run(
+      orderId, chainId, assetPairId, orderDirection, orderType, 
+      timeInForce, stpMode, price, amountOut, amountIn, 
+      partialAmountIn, status, wallet, publicKey, noteCommitment, 
+      nullifier, signature, txHashCreated);
   }
 
   public async getOrdersByStatusAndPage(status: number, page: number, limit: number): Promise<OrderDto[]> {

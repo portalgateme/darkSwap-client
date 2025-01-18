@@ -28,7 +28,7 @@ export class SettlementService {
 
   async makerSwap(orderId: string) {
     const orderInfo = await this.dbService.getOrderByOrderId(orderId);
-    const rawNote = await this.dbService.getNoteByCommitment(BigInt(orderInfo.noteCommitment));
+    const rawNote = await this.dbService.getNoteByCommitment(orderInfo.noteCommitment);
     const note = {
       note: rawNote.noteCommitment,
       rho: rawNote.rho,
@@ -88,7 +88,7 @@ export class SettlementService {
 
   async takerSwap(orderId: string){
     const orderInfo = await this.dbService.getOrderByOrderId(orderId);
-    const rawNote = await this.dbService.getNoteByCommitment(BigInt(orderInfo.noteCommitment));
+    const rawNote = await this.dbService.getNoteByCommitment(orderInfo.noteCommitment);
     const note = {
       note: rawNote.noteCommitment,
       rho: rawNote.rho,
