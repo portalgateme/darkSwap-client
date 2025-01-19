@@ -1,7 +1,7 @@
 import { DarkPool,isAddressCompliant } from "@thesingularitynetwork/singularity-sdk"
 import { Signer } from "ethers"
-import { getDarkPool } from "src/utils/darkpool"
-import RpcManager from "src/utils/rpcManager"
+import { getDarkPool } from "../../utils/darkpool"
+import RpcManager from "../../utils/rpcManager"
 
 export class DarkpoolContext {
     chainId: number

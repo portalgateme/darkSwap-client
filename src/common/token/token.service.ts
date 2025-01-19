@@ -1,7 +1,7 @@
 import { Token } from "@thesingularitynetwork/singularity-sdk";
 import { Contract } from "ethers";
-import { tokenConfig } from "src/config/tokenConfig";
-import RpcManager from "src/utils/rpcManager";
+import { tokenConfig } from "../../config/tokenConfig";
+import RpcManager from "../../utils/rpcManager";
 
 
 export class TokenService {

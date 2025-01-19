@@ -1,5 +1,5 @@
-import { ChainId, HexData, RelayerInfo } from "src/types";
-import { ConfigLoader } from "src/utils/configUtil";
+import { ChainId, HexData, RelayerInfo } from "../types";
+import { ConfigLoader } from "../utils/configUtil";
 
 const parseEnvRelayerConfig = () => {
   const customConfig: { [chainId: number]: RelayerInfo[] } = {};

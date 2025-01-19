@@ -1,8 +1,8 @@
 import { DarkPool } from "@thesingularitynetwork/singularity-sdk"
 import { Signer } from "ethers"
-import { networkConfig } from "src/config/networkConfig"
-import { relayerConfig } from "src/config/relayerConfig"
-import { stakingTokenConfig } from "src/config/stakingConfig"
+import { networkConfig } from "../config/networkConfig"
+import { relayerConfig } from "../config/relayerConfig"
+import { stakingTokenConfig } from "../config/stakingConfig"
 
 export function getDarkPool(chainId: number, signer: Signer) {
     if (!networkConfig[chainId]) {

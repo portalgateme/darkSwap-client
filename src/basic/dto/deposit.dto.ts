@@ -1,8 +1,8 @@
 import { ApiProperty } from "@nestjs/swagger";
 import { BaseDto } from "../../common/dto/base.dto";
-import { IsEthereumAddress } from "src/common/decorators/is-ethereum-address.decorator";
+import { IsEthereumAddress } from "../../common/decorators/is-ethereum-address.decorator";
 import { IsNotEmpty } from "class-validator";
-import { IsBigIntString } from "src/common/decorators/is-bigint-string.decorator";
+import { IsBigIntString } from "../../common/decorators/is-bigint-string.decorator";
 
 export class DepositDto extends BaseDto {
   @ApiProperty()

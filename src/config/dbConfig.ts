@@ -1,4 +1,4 @@
-import { ConfigLoader } from "src/utils/configUtil";
+import { ConfigLoader } from "../utils/configUtil";
 
 export default{
     dbFile: ConfigLoader.getInstance().getConfig().dbFilePath,
