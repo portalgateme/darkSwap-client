@@ -8,5 +8,5 @@ services:
     volumes:
       - ./data:/data  
     environment:
-      - NODE_ENV=dev
+      - NODE_ENV=prodution
 

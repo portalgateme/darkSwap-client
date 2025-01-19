@@ -1,0 +1,6 @@
+.git
+.gitignore
+npm-debug.log
+README.md
+config.yaml.example
+db.sqlite3
