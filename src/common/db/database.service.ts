@@ -77,9 +77,9 @@ export class DatabaseService {
   }
 
   public async getNotesByWallet(walletAddress: string): Promise<NoteDto[]> {
-    const query = `SELECT * FROM NOTES WHERE wallet = ?`;
+    const query = `SELECT * FROM NOTES WHERE wallet = ? AND (status = ? OR status = ?)`;
     const stmt = this.db.prepare(query);
-    const rows = stmt.all(walletAddress.toLowerCase()) as NoteEntity[];
+    const rows = stmt.all(walletAddress.toLowerCase(), NoteStatus.ACTIVE, NoteStatus.LOCKED) as NoteEntity[];
 
     const notes = rows.map(row => ({
       id: row.id,
@@ -89,7 +89,7 @@ export class DatabaseService {
       type: row.type,
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
-      asset: row.asset,
+      asset: row.asset.toLowerCase(),
       amount: BigInt(row.amount),
       status: row.status,
       txHashCreated: row.txHashCreated,
