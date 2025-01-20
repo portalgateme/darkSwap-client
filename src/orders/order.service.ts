@@ -1,34 +1,17 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
 import { CancelOrderService, CreateMakerOrderService } from '@thesingularitynetwork/singularity-sdk';
-import axios from 'axios';
+import { BooknodeService } from 'src/common/booknode.service';
+import { v4 } from 'uuid';
+import { DarkpoolContext } from '../common/context/darkpool.context';
+import { DatabaseService } from '../common/db/database.service';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
 import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
 import { NoteStatus, OrderDirection } from '../types';
 import { ConfigLoader } from '../utils/configUtil';
-import { v4 } from 'uuid';
-import { DarkpoolContext } from '../common/context/darkpool.context';
-import { DatabaseService } from '../common/db/database.service';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
-
-interface BookNodeCreateOrderDto {
-  chainId: number;
-  wallet: string;
-  orderId: string;
-  assetPairId: string;
-  orderDirection: number;
-  orderType: number;
-  timeInForce: number;
-  stpMode: number;
-  price: number;
-  amountOut: string;
-  amountIn: string;
-  partialAmountIn: string;
-  publicKey: string;
-  nullifier: string;
-  txHashCreated: string;
-}
+import { UpdatePriceDto } from './dto/updatePrice.dto';
 
 
 @Injectable()
@@ -40,11 +23,13 @@ export class OrderService {
   private dbService: DatabaseService;
   private noteBatchJoinSplitService: NoteBatchJoinSplitService;
   private configLoader: ConfigLoader;
+  private bookNodeService: BooknodeService;
 
   public constructor() {
     this.dbService = DatabaseService.getInstance();
     this.noteBatchJoinSplitService = NoteBatchJoinSplitService.getInstance();
     this.configLoader = ConfigLoader.getInstance();
+    this.bookNodeService = BooknodeService.getInstance();
   }
 
   async createOrder(orderDto: OrderDto, darkPoolContext: DarkpoolContext) {
@@ -73,31 +58,20 @@ export class OrderService {
     await this.dbService.addOrderByDto(orderDto);
 
     delete orderDto.noteCommitment;
-    const createOrderRequestDto: BookNodeCreateOrderDto = {
-      chainId: orderDto.chainId,
-      wallet: orderDto.wallet,
-      orderId: orderDto.orderId,
-      assetPairId: orderDto.assetPairId,
-      orderDirection: orderDto.orderDirection,
-      orderType: orderDto.orderType,
-      timeInForce: orderDto.timeInForce,
-      stpMode: orderDto.stpMode,
-      price: Number(orderDto.price),
-      amountOut: orderDto.amountOut.toString(),
-      amountIn: orderDto.amountIn.toString(),
-      partialAmountIn: orderDto.partialAmountIn.toString(),
-      publicKey: orderDto.publicKey,
-      nullifier: orderDto.nullifier.toString(),
-      txHashCreated: orderDto.txHashCreated
-    }
-    await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/api/orders/create`, createOrderRequestDto, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
-      }
-    });
+    
+    await this.bookNodeService.createOrder(orderDto);
 
     this.logger.log(`Order created: ${orderDto.orderDirection === OrderDirection.BUY ? 'BUY' : 'SELL'} ${orderDto.orderId} ${orderDto.assetPairId} OUT: ${orderDto.amountOut} IN: ${orderDto.amountIn}`);
+  }
+
+  async updateOrderPrice(updatePriceDto: UpdatePriceDto) {
+    const order = await this.dbService.getOrderByOrderId(updatePriceDto.orderId);
+    if (!order) {
+      throw new Error('Order not found');
+    }
+    await this.dbService.updateOrderPrice(updatePriceDto.orderId, updatePriceDto.price, BigInt(order.amountIn), BigInt(order.partialAmountIn));
+    await this.bookNodeService.updateOrderPrice(updatePriceDto);
+    return true;
   }
 
   // Method to cancel an order
@@ -124,12 +98,7 @@ export class OrderService {
     await cancelOrderService.generateProof(context);
     await cancelOrderService.execute(context);
     await this.dbService.cancelOrder(cancelOrderDto.orderId);
-    await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}/api/orders/cancel`, cancelOrderDto, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
-      }
-    });
+    await this.bookNodeService.cancelOrder(cancelOrderDto);
   }
 
   async getOrdersByStatusAndPage(status: number, page: number, limit: number): Promise<OrderDto[]> {

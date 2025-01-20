@@ -6,6 +6,8 @@ import { AppModule } from './app.module';
 import { AssetPairService } from './common/assetPair.service';
 import { SettlementService } from './settlement/settlement.service';
 import { ConfigLoader } from './utils/configUtil';
+import { ResponseInterceptor } from './common/response.interceptor';
+import { DarkpoolExceptionFilter } from './common/exception.filter';
 
 enum EventType {
   OrderMatched = 1,
@@ -21,6 +23,8 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
+  app.useGlobalFilters(new DarkpoolExceptionFilter());
+  app.useGlobalInterceptors(new ResponseInterceptor());
 
   // Swagger config
   const config = new DocumentBuilder()

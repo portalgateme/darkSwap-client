@@ -1,12 +1,9 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
-import { ethers } from 'ethers';
+import { Body, Controller, Post } from '@nestjs/common';
 import { DarkpoolContext } from '../common/context/darkpool.context';
 import { TokenService } from '../common/token/token.service';
 import { BasicService } from './basic.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
-import { BaseDto } from '../common/dto/base.dto';
-import { retry } from 'rxjs';
 
 @Controller('basic')
 export class BasicController {
@@ -26,15 +23,5 @@ export class BasicController {
     const token = await TokenService.getTokenByChainId(withdrawDto.chainId, withdrawDto.asset);
     await this.basicService.withdraw(context, token, BigInt(withdrawDto.amount), withdrawDto.receiptAddress);
     return { message: 'success' };
-  }
-
-  @Get('syncNoteStatus')
-  async syncNoteStatus() {
-    // return this.basicService.syncNoteStatus();
-  }
-
-  @Get('getAssets')
-  async getAssets(@Body() baseDto: BaseDto) {
-    return this.basicService.getAssets(baseDto);
   }
 }

@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Delete, Param, Body } from '@nestjs/common';
+import { Controller, Get, Post, Delete, Param, Body, Put } from '@nestjs/common';
 import { OrderService } from './order.service';
 import { OrderDto } from './dto/order.dto';
 import { DarkpoolContext } from '../common/context/darkpool.context';
+import { UpdatePriceDto } from './dto/updatePrice.dto';
 
 @Controller('orders')
 export class OrderController {
@@ -17,6 +18,11 @@ export class OrderController {
   async cancelOrder(@Body() orderId: string, wallet: string, chainId: number) {
     const context = await DarkpoolContext.createDarkpoolContext(chainId, wallet)
     return this.orderService.cancelOrder(orderId, context);
+  }
+
+  @Put('updatePrice')
+  async updateOrderPrice(@Body() updatePriceDto: UpdatePriceDto) {
+    return await this.orderService.updateOrderPrice(updatePriceDto);
   }
 
 

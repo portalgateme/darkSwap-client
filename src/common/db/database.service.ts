@@ -3,7 +3,6 @@ import config from '../../config/dbConfig';
 import { NoteDto } from '../dto/note.dto';
 import { AssetPairDto } from '../dto/assetPair.dto';
 import { OrderDto } from '../../orders/dto/order.dto';
-import { AssetDto } from '../../basic/dto/asset.dto';
 import { ConfigLoader } from '../../utils/configUtil';
 import { NoteStatus, OrderStatus } from '../../types';
 
@@ -358,6 +357,12 @@ export class DatabaseService {
 
   }
 
+  public async updateOrderPrice(orderId: string, price: string, amountIn: bigint, partialAmountIn: bigint) {
+    const query = `UPDATE ORDERS SET price = ?, amountIn = ?, partialAmountIn = ? WHERE orderId = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(price, amountIn.toString(), partialAmountIn.toString(), orderId);
+  }
+
   public async getOrderByOrderId(orderId: string): Promise<OrderDto> {
     const query = `SELECT * FROM ORDERS WHERE orderId = ?`;
     const stmt = this.db.prepare(query);
@@ -410,13 +415,6 @@ export class DatabaseService {
     const query = `UPDATE ORDERS SET txHashSettled = ? WHERE orderId = ?`;
     const stmt = this.db.prepare(query);
     stmt.run(txHash, orderId);
-  }
-
-  public async getAssetsByWalletAndchainId(wallet: string, chainId: number): Promise<AssetDto[]> {
-    const query = `SELECT asset, SUM(amount) FROM NOTES WHERE wallet = ? AND chainId = ? AND status = 0  GROUP by asset`;
-    const stmt = this.db.prepare(query);
-    const rows = stmt.all(wallet, chainId) as AssetDto[];
-    return rows;
   }
 
 }
