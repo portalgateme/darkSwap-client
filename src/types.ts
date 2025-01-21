@@ -66,3 +66,19 @@ export enum OrderStatus {
     SETTLED = 3,
     CANCELLED = 4,
 }
+
+export enum OrderType {
+    MARKET = 0,
+    LIMIT = 1,
+}
+
+export enum StpMode {
+    NONE = 0,
+    EXPIRE_MAKER = 1,
+    EXPIRE_TAKER = 2,
+    BOTH = 3,
+}
+
+export enum TimeInForce {
+    GTC = 0
+}

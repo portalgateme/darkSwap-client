@@ -5,7 +5,7 @@ import { IsOrderStpModeValid } from '../../common/decorators/is-order-stp-mode-v
 import { IsOrderTimeInForceValid } from '../../common/decorators/is-order-time-in-force-valid.decorator';
 import { IsOrderTypeValid } from '../../common/decorators/is-order-type-valid.decorator';
 import { BaseDto } from '../../common/dto/base.dto';
-import { OrderDirection, OrderStatus } from '../../types';
+import { OrderDirection, OrderStatus, OrderType, StpMode, TimeInForce } from '../../types';
 
 export class OrderDto extends BaseDto {
     id?: number;
@@ -21,15 +21,24 @@ export class OrderDto extends BaseDto {
     })
     @IsOrderDirectionValid()
     orderDirection: OrderDirection;
-    @ApiProperty()
+    @ApiProperty({
+        enum: OrderType,
+        description: '0 for market, 1 for limit',
+    })
     @IsOrderTypeValid()
-    orderType: number;
-    @ApiProperty()
+    orderType: OrderType;
+    @ApiProperty({
+        enum: TimeInForce,
+        description: '0 for GTC',
+    })
     @IsOrderTimeInForceValid()
-    timeInForce: number;
-    @ApiProperty()
+    timeInForce: TimeInForce;
+    @ApiProperty({
+        enum: StpMode,
+        description: '0 for none',
+    })
     @IsOrderStpModeValid()
-    stpMode: number;
+    stpMode: StpMode;
     @ApiProperty({description: 'Human readable price'})
     @IsNotEmpty()
     price: string;
