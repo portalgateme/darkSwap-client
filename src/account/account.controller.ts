@@ -7,10 +7,10 @@ import { BaseDto } from '../common/dto/base.dto';
 export class AccountController {
   constructor(private readonly accountService: AccountService) { }
 
-  @Get('/:wallet')
-  async getAssets(@Param('wallet') wallet: string): Promise<MyAssetsDto[]> {
-    return this.accountService.getAssets(wallet);
-  }
+  // @Get('/:wallet')
+  // async getAssets(@Param('wallet') wallet: string): Promise<MyAssetsDto[]> {
+  //   return this.accountService.getAssets(wallet);
+  // }
 
   @Post()
   async getAssetsByChainIdAndWallet(@Body() baseDto: BaseDto): Promise<MyAssetsDto> {

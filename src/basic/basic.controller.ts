@@ -4,6 +4,7 @@ import { TokenService } from '../common/token/token.service';
 import { BasicService } from './basic.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
+import { BaseDto } from 'src/common/dto/base.dto';
 
 @Controller('basic')
 export class BasicController {
@@ -22,6 +23,11 @@ export class BasicController {
     const context = await DarkpoolContext.createDarkpoolContext(withdrawDto.chainId, withdrawDto.wallet)
     const token = await TokenService.getTokenByChainId(withdrawDto.chainId, withdrawDto.asset);
     await this.basicService.withdraw(context, token, BigInt(withdrawDto.amount), withdrawDto.receiptAddress);
+    return { message: 'success' };
+  }
+
+  @Post('mintAccessToken')
+  async mintAccessToken(@Body() baseDto: BaseDto) {
     return { message: 'success' };
   }
 }
