@@ -8,7 +8,8 @@
     "build": "tsc",
     "start:dev": "NODE_ENV=dev nest start --watch",
     "lint": "eslint '{src,test}/**/*.ts'",
-    "test": "jest"
+    "test": "jest",
+    "docker:build": "docker build -t singularity-pro ."
   },
   "dependencies": {
     "@aztec/bb.js": "^0.70.0",
