@@ -1,11 +1,11 @@
 import axios from 'axios';
-import { CancelOrderDto } from 'src/orders/dto/cancelOrder.dto';
+import { CancelOrderDto } from '../orders/dto/cancelOrder.dto';
 import { MatchedOrderDto } from '../settlement/dto/matchedOder.dto';
 import { SettlementDto } from '../settlement/dto/settlement.dto';
 import { TakerConfirmDto } from '../settlement/dto/takerConfirm.dto';
 import { ConfigLoader } from '../utils/configUtil';
-import { UpdatePriceDto } from 'src/orders/dto/updatePrice.dto';
-import { OrderDto } from 'src/orders/dto/order.dto';
+import { UpdatePriceDto } from '../orders/dto/updatePrice.dto';
+import { OrderDto } from '../orders/dto/order.dto';
 
 interface BookNodeMatchedOrder {
     orderId: string;

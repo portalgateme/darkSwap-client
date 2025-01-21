@@ -27,13 +27,6 @@ export class OrderController {
     return await this.orderService.updateOrderPrice(updatePriceDto);
   }
 
-  @ApiOperation({
-    description: 'OrderDirection: 0 for buy, 1 for sell<br>' +
-      'OrderType: 0 for market, 1 for limit<br>' +
-      'TimeInForce: 0 for good till canceled<br>' +
-      'StpMode: 0 for none<br>' +
-      'OrderStatus: 0 for open, 1 matched, 2 for cancelled<br>'
-  })
   @Get('getAllOrders/:status/:page/:limit')
   getAllOrders(@Param('status') status: number, @Param('page') page: number, @Param('limit') limit: number) {
     return this.orderService.getOrdersByStatusAndPage(status, page, limit);
