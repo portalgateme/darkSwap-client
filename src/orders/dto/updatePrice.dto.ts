@@ -7,15 +7,15 @@ export class UpdatePriceDto extends BaseDto {
     @IsNotEmpty()
     orderId: string;
 
-    @ApiProperty()
+    @ApiProperty({description: 'Human readable price'})
     @IsNotEmpty()
     price: string;
 
-    @ApiProperty()
+    @ApiProperty({description: 'Amount with decimals'})
     @IsNotEmpty()
     amountIn: string;
     
-    @ApiProperty()
+    @ApiProperty({description: 'Amount with decimals'})
     @IsNotEmpty()
     partialAmountIn: string;
 } 

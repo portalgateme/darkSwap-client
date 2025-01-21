@@ -291,7 +291,7 @@ export class DatabaseService {
     stmt.run(
       order.orderId, order.chainId, order.assetPairId, order.orderDirection, order.orderType, 
       order.timeInForce, order.stpMode, order.price, order.amountOut, order.amountIn, 
-      order.partialAmountIn, OrderStatus.CREATED, order.wallet, order.publicKey, order.noteCommitment.toString(), 
+      order.partialAmountIn, OrderStatus.OPEN, order.wallet, order.publicKey, order.noteCommitment.toString(), 
       order.nullifier, order.txHashCreated);
 
   }
@@ -322,7 +322,7 @@ export class DatabaseService {
     stmt.run(
       orderId, chainId, assetPairId, orderDirection, orderType, 
       timeInForce, stpMode, price, amountOut, amountIn, 
-      partialAmountIn, OrderStatus.CREATED, wallet, publicKey, noteCommitment, 
+      partialAmountIn, OrderStatus.OPEN, wallet, publicKey, noteCommitment, 
       nullifier, signature, txHashCreated);
   }
 
@@ -402,7 +402,7 @@ export class DatabaseService {
   public updateOrderConfirmedAndIncomingNoteCommitment(orderId: string, incomingNoteCommitment: bigint) {
     const query = `UPDATE ORDERS SET status = ?, incomingNoteCommitment = ? WHERE orderId = ?`;
     const stmt = this.db.prepare(query);
-    stmt.run(OrderStatus.CONFIRMED, incomingNoteCommitment.toString(), orderId);
+    stmt.run(OrderStatus.TAKER_CONFIRMED, incomingNoteCommitment.toString(), orderId);
   }
 
   public async updateOrderMatched(orderId: string) {

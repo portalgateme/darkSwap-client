@@ -1,13 +1,13 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
 import { CancelOrderService, CreateMakerOrderService } from '@thesingularitynetwork/singularity-sdk';
-import { BooknodeService } from 'src/common/booknode.service';
+import { BooknodeService } from '../common/booknode.service';
 import { v4 } from 'uuid';
 import { DarkpoolContext } from '../common/context/darkpool.context';
 import { DatabaseService } from '../common/db/database.service';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
 import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
-import { NoteStatus, OrderDirection } from '../types';
+import { NoteStatus, OrderDirection, OrderStatus } from '../types';
 import { ConfigLoader } from '../utils/configUtil';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
@@ -49,7 +49,7 @@ export class OrderService {
     if (!orderDto.orderId) {
       orderDto.orderId = v4();
     }
-    orderDto.status = NoteStatus.ACTIVE;
+    orderDto.status = OrderStatus.OPEN;
     orderDto.noteCommitment = noteForOrder.note.toString();
     orderDto.nullifier = context.proof.outNullifier;
     orderDto.txHashCreated = tx;

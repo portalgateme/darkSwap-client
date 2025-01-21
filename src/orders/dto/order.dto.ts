@@ -1,10 +1,11 @@
-import { BaseDto } from '../../common/dto/base.dto';
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsNumber, IsOptional } from 'class-validator';
+import { ApiExtraModels, ApiProperty } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional } from 'class-validator';
 import { IsOrderDirectionValid } from '../../common/decorators/is-order-direction-valid.decorator';
 import { IsOrderStpModeValid } from '../../common/decorators/is-order-stp-mode-valid.decorator';
 import { IsOrderTimeInForceValid } from '../../common/decorators/is-order-time-in-force-valid.decorator';
 import { IsOrderTypeValid } from '../../common/decorators/is-order-type-valid.decorator';
+import { BaseDto } from '../../common/dto/base.dto';
+import { OrderDirection, OrderStatus } from '../../types';
 
 export class OrderDto extends BaseDto {
     id?: number;
@@ -14,9 +15,12 @@ export class OrderDto extends BaseDto {
     @ApiProperty()
     @IsNotEmpty()
     assetPairId: string;
-    @ApiProperty()
+    @ApiProperty({
+        enum: OrderDirection,
+        description: '0 for buy, 1 for sell',
+    })
     @IsOrderDirectionValid()
-    orderDirection: number;
+    orderDirection: OrderDirection;
     @ApiProperty()
     @IsOrderTypeValid()
     orderType: number;
@@ -26,19 +30,21 @@ export class OrderDto extends BaseDto {
     @ApiProperty()
     @IsOrderStpModeValid()
     stpMode: number;
-    @ApiProperty()
+    @ApiProperty({description: 'Human readable price'})
     @IsNotEmpty()
     price: string;
-    @ApiProperty()
+    @ApiProperty({description: 'Amount with decimals'})
     @IsNotEmpty()
     amountOut: string;
-    @ApiProperty()
+    @ApiProperty({description: 'Amount with decimals'})
     @IsNotEmpty()
     amountIn: string;
-    @ApiProperty() 
+    @ApiProperty({description: 'Amount with decimals'})
     @IsOptional()
     partialAmountIn?: string;
-    status?: number;
+    @ApiProperty()
+    @IsOptional()
+    status?: OrderStatus;
     publicKey?: string;
     noteCommitment?: string;
     incomingNoteCommitment?: string;

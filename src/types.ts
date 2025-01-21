@@ -60,9 +60,9 @@ export enum NoteStatus {
 }
 
 export enum OrderStatus {
-    CREATED = 0,
+    OPEN = 0,
     MATCHED = 1,
-    CONFIRMED = 2,
+    TAKER_CONFIRMED = 2,
     SETTLED = 3,
     CANCELLED = 4,
 }
