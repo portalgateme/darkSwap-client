@@ -1,0 +1,12 @@
+version: '4.37'
+services:
+  app:
+    container_name: singularity-pro
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/data  
+    environment:
+      - NODE_ENV=prodution
+

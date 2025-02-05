@@ -1,0 +1,84 @@
+
+export enum ChainId {
+    HARDHAT = 31337,
+    HARDHAT_ARBITRUM = 31338,
+    HARDHAT_BASE = 31339,
+    MAINNET = 1,
+    SEPOLIA = 11155111,
+    ARBITRUM_ONE = 42161,
+    BASE = 8453,
+    BounceBit = 6001,
+    BounceBitTestnet = 6000,
+    EMCTestnet = 99876,
+}
+
+export type HexData = `0x${string}`
+
+
+
+export type NetworkConfig = {
+    priceOracle: HexData
+    ethAddress: HexData
+    nativeWrapper: HexData
+    complianceManager: HexData
+    merkleTreeOperator: HexData
+    darkpoolAssetManager: HexData
+    nftAssetManager: HexData
+    drakpoolSubgraphUrl: string
+    stakingOperator: HexData
+    stakingAssetManager: HexData
+    sablierDynamicAssetManager: HexData
+    sablierLinearAssetManager: HexData
+    oTCSwapAssetManager: HexData
+    batchJoinSplitAssetManager: HexData
+    darkPoolSwapAssetManager: HexData
+
+    explorerUrl: {
+        tx: string
+        address: string
+        block: string
+    }
+}
+
+export type RelayerInfo = {
+    relayerName: string
+    relayerAddress: HexData
+    hostUrl: string
+}
+
+
+export enum OrderDirection {
+    BUY = 0,
+    SELL = 1
+}
+
+export enum NoteStatus {
+    CREATED = 0,
+    ACTIVE = 1,
+    SPENT = 2,
+    LOCKED = 3,
+}
+
+export enum OrderStatus {
+    OPEN = 0,
+    MATCHED = 1,
+    TAKER_CONFIRMED = 2,
+    SETTLED = 3,
+    CANCELLED = 4,
+}
+
+export enum OrderType {
+    MARKET = 0,
+    LIMIT = 1,
+}
+
+export enum StpMode {
+    NONE = 0,
+    EXPIRE_MAKER = 1,
+    EXPIRE_TAKER = 2,
+    BOTH = 3,
+}
+
+export enum TimeInForce {
+    GTC = 0
+}
