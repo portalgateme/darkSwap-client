@@ -8,12 +8,14 @@ import { SettlementService } from './settlement/settlement.service';
 import { ConfigLoader } from './utils/configUtil';
 import { ResponseInterceptor } from './common/response.interceptor';
 import { DarkpoolExceptionFilter } from './common/exception.filter';
+import { OrderService } from './orders/order.service';
 
 enum EventType {
   OrderMatched = 1,
   OrderConfirmed = 2,
   OrderSettled = 3,
   AssetPairCreated = 4,
+  orderCancelled = 5,
   Unknown = 0
 }
 
@@ -78,6 +80,7 @@ function startWebSocket() {
         const settlementService = SettlementService.getInstance();
         const assetPairService = AssetPairService.getInstance();
         const notificationEvent = JSON.parse(data.toString());
+        const orderService = OrderService.getInstance();
         
         switch (notificationEvent.eventType) {
           case EventType.OrderMatched:
@@ -94,6 +97,9 @@ function startWebSocket() {
             break;
           case EventType.AssetPairCreated:
             await assetPairService.syncAssetPair(notificationEvent.assetPairId, notificationEvent.chainId);
+            break;
+          case EventType.orderCancelled:
+            await orderService.cancelOrderByNotificaion(notificationEvent.orderId);
             break;
           default:
             console.log('Unknown event:', notificationEvent);

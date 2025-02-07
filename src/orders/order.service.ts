@@ -32,6 +32,13 @@ export class OrderService {
     this.bookNodeService = BooknodeService.getInstance();
   }
 
+  public static getInstance(): OrderService {
+    if (!OrderService.instance) {
+      OrderService.instance = new OrderService();
+    }
+    return OrderService.instance;
+  }
+
   async createOrder(orderDto: OrderDto, darkPoolContext: DarkpoolContext) {
     const createMakerOrderService = new CreateMakerOrderService(darkPoolContext.darkPool);
 
@@ -75,7 +82,7 @@ export class OrderService {
   }
 
   // Method to cancel an order
-  async cancelOrder(orderId: string, darkPoolContext: DarkpoolContext) {
+  async cancelOrder(orderId: string, darkPoolContext: DarkpoolContext, byNotification: boolean = false) {
 
     const cancelOrderService = new CancelOrderService(darkPoolContext.darkPool);
 
@@ -98,7 +105,16 @@ export class OrderService {
     await cancelOrderService.generateProof(context);
     await cancelOrderService.execute(context);
     await this.dbService.cancelOrder(cancelOrderDto.orderId);
-    await this.bookNodeService.cancelOrder(cancelOrderDto);
+    if(!byNotification) {
+      await this.bookNodeService.cancelOrder(cancelOrderDto);
+    }
+  }
+
+  async cancelOrderByNotificaion(orderId: string) {
+    
+    const order = await this.dbService.getOrderByOrderId(orderId);
+    const darkPoolContext = await DarkpoolContext.createDarkpoolContext(order.chainId, order.wallet);
+    await this.cancelOrder(orderId, darkPoolContext, true);
   }
 
   async getOrdersByStatusAndPage(status: number, page: number, limit: number): Promise<OrderDto[]> {

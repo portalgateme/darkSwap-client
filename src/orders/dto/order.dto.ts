@@ -23,19 +23,19 @@ export class OrderDto extends BaseDto {
     orderDirection: OrderDirection;
     @ApiProperty({
         enum: OrderType,
-        description: '0 for market, 1 for limit',
+        description: '0 for market, 1 for limit, 2 for stop loss, 3 for stop loss limit, 4 for take profit, 5 for take profit limit, 6 for limit maker',
     })
     @IsOrderTypeValid()
     orderType: OrderType;
     @ApiProperty({
         enum: TimeInForce,
-        description: '0 for GTC',
+        description: '0 for GTC, 1 for GTD, 2 for IOC, 4 for FOK, 8 for AON GTC, 9 for AON GTD',
     })
     @IsOrderTimeInForceValid()
     timeInForce: TimeInForce;
     @ApiProperty({
         enum: StpMode,
-        description: '0 for none',
+        description: '0 for none, 1 for expire maker, 2 for expire taker, 3 for both',
     })
     @IsOrderStpModeValid()
     stpMode: StpMode;
