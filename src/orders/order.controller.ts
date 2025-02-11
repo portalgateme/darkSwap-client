@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
 import { DarkpoolContext } from '../common/context/darkpool.context';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
@@ -58,7 +58,7 @@ export class OrderController {
 
   @Get('getAssetPairs')
   @ApiGenericArrayResponse(AssetPairDto)
-  getAssetPairs(@Param('chainId') chainId: number) {
+  getAssetPairs(@Query('chainId') chainId: number) {
     return this.orderService.getAssetPairs(chainId);
   }
 
