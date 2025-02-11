@@ -6,6 +6,7 @@ import { TakerConfirmDto } from '../settlement/dto/takerConfirm.dto';
 import { ConfigLoader } from '../utils/configUtil';
 import { UpdatePriceDto } from '../orders/dto/updatePrice.dto';
 import { OrderDto } from '../orders/dto/order.dto';
+import { DarkpoolException } from '../exception/darkpool.exception';
 
 interface BookNodeMatchedOrder {
     orderId: string;
@@ -67,23 +68,34 @@ export class BooknodeService {
     }
 
     private async sendPutRequest(req: any, url: string): Promise<any> {
-        const result = await axios.put(`${this.configLoader.getConfig().bookNodeApiUrl}${url}`, req, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
-            }
-        });
-        return result;
+        try {
+            const result = await axios.put(`${this.configLoader.getConfig().bookNodeApiUrl}${url}`, req, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
+                }
+            });
+            return result;
+        } catch (error) {
+            console.error('Error in sendPutRequest:', error.response ? error.response.data : error.message);
+            throw new DarkpoolException(`Failed to send request to booknode for url: ${url}`);
+        }
     }
 
     private async sendRequest(req: any, url: string): Promise<any> {
-        const result = await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}${url}`, req, {
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
-            }
-        });
-        return result;
+        try {
+            const result = await axios.post(`${this.configLoader.getConfig().bookNodeApiUrl}${url}`, req, {
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${this.configLoader.getConfig().bookNodeApiKey}`
+                }
+            });
+            console.log(result);
+            return result;
+        } catch (error) {
+            console.error('Error in sendRequest:', error.response ? error.response.data : error.message);
+            throw new DarkpoolException(`Failed to send request to booknode for url: ${url}`);
+        }
     }
 
     public async getMatchedOrderDetails(settlementDto: SettlementDto): Promise<MatchedOrderDto> {
@@ -119,7 +131,7 @@ export class BooknodeService {
             publicKey: orderDto.publicKey,
             nullifier: orderDto.nullifier.toString(),
             txHashCreated: orderDto.txHashCreated
-          }
+        }
         const result = await this.sendRequest(createOrderRequestDto, '/api/orders/create');
         return result.data;
     }
