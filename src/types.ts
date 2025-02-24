@@ -70,6 +70,11 @@ export enum OrderStatus {
 export enum OrderType {
     MARKET = 0,
     LIMIT = 1,
+    STOP_LOSS = 2,
+    STOP_LOSS_LIMIT = 3,
+    TAKE_PROFIT = 4,
+    TAKE_PROFIT_LIMIT = 5,
+    LIMIT_MAKER = 6,
 }
 
 export enum StpMode {
@@ -80,5 +85,10 @@ export enum StpMode {
 }
 
 export enum TimeInForce {
-    GTC = 0
+    GTC = 0,
+    GTD = 1,
+    IOC = 2,
+    FOK = 4,
+    AON_GTC = 8,
+    AON_GTD = 9,
 }

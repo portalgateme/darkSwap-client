@@ -7,11 +7,12 @@ import { DarkpoolContext } from '../common/context/darkpool.context';
 import { DatabaseService } from '../common/db/database.service';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
 import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
-import { NoteStatus, OrderDirection, OrderStatus } from '../types';
+import { OrderDirection, OrderStatus } from '../types';
 import { ConfigLoader } from '../utils/configUtil';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
 import { UpdatePriceDto } from './dto/updatePrice.dto';
+import { DarkpoolException } from '../exception/darkpool.exception';
 
 
 @Injectable()
@@ -32,6 +33,13 @@ export class OrderService {
     this.bookNodeService = BooknodeService.getInstance();
   }
 
+  public static getInstance(): OrderService {
+    if (!OrderService.instance) {
+      OrderService.instance = new OrderService();
+    }
+    return OrderService.instance;
+  }
+
   async createOrder(orderDto: OrderDto, darkPoolContext: DarkpoolContext) {
     const createMakerOrderService = new CreateMakerOrderService(darkPoolContext.darkPool);
 
@@ -40,7 +48,7 @@ export class OrderService {
 
     const noteForOrder = await this.noteBatchJoinSplitService.getNoteOfAssetAmount(darkPoolContext, outAsset, BigInt(orderDto.amountOut));
     if (!noteForOrder) {
-      throw new Error('Asset not enough');
+      throw new DarkpoolException(`Asset ${outAsset} not enough`);
     }
     const { context } = await createMakerOrderService.prepare(noteForOrder, darkPoolContext.signature);
     await createMakerOrderService.generateProof(context);
@@ -67,7 +75,7 @@ export class OrderService {
   async updateOrderPrice(updatePriceDto: UpdatePriceDto) {
     const order = await this.dbService.getOrderByOrderId(updatePriceDto.orderId);
     if (!order) {
-      throw new Error('Order not found');
+      throw new DarkpoolException('Order not found');
     }
     await this.dbService.updateOrderPrice(updatePriceDto.orderId, updatePriceDto.price, BigInt(order.amountIn), BigInt(order.partialAmountIn));
     await this.bookNodeService.updateOrderPrice(updatePriceDto);
@@ -75,7 +83,7 @@ export class OrderService {
   }
 
   // Method to cancel an order
-  async cancelOrder(orderId: string, darkPoolContext: DarkpoolContext) {
+  async cancelOrder(orderId: string, darkPoolContext: DarkpoolContext, byNotification: boolean = false) {
 
     const cancelOrderService = new CancelOrderService(darkPoolContext.darkPool);
 
@@ -98,7 +106,16 @@ export class OrderService {
     await cancelOrderService.generateProof(context);
     await cancelOrderService.execute(context);
     await this.dbService.cancelOrder(cancelOrderDto.orderId);
-    await this.bookNodeService.cancelOrder(cancelOrderDto);
+    if(!byNotification) {
+      await this.bookNodeService.cancelOrder(cancelOrderDto);
+    }
+  }
+
+  async cancelOrderByNotificaion(orderId: string) {
+    
+    const order = await this.dbService.getOrderByOrderId(orderId);
+    const darkPoolContext = await DarkpoolContext.createDarkpoolContext(order.chainId, order.wallet);
+    await this.cancelOrder(orderId, darkPoolContext, true);
   }
 
   async getOrdersByStatusAndPage(status: number, page: number, limit: number): Promise<OrderDto[]> {

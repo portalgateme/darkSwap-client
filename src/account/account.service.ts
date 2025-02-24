@@ -15,13 +15,6 @@ export class AccountService {
     this.dbService = DatabaseService.getInstance();
   }
 
-  public static getInstance(): AccountService {
-    if (!AccountService.instance) {
-      AccountService.instance = new AccountService();
-    }
-    return AccountService.instance;
-  }
-
   async getAssetsByChainId(wallet: string, chainId: number): Promise<MyAssetsDto> {
     const notes = await this.dbService.getNotesByWalletAndChainId(wallet, chainId);
     const assetMap = new Map<string, { amount: bigint, lockedAmount: bigint }>();
