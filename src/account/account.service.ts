@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../common/db/database.service';
 import { NoteStatus } from '../types';
 import { MyAssetsDto } from './dto/asset.dto';
+import { isNoteCommitmentValidOnChain, isNoteSpent } from '@thesingularitynetwork/singularity-sdk';
+import { DarkpoolContext } from 'src/common/context/darkpool.context';
 
 @Injectable()
 export class AccountService {
@@ -94,5 +96,56 @@ export class AccountService {
     }
 
     return myAssetsArray;
+  }
+
+  async syncAssets(darkpoolContext: DarkpoolContext, wallet: string, chainId: number): Promise<void> {
+    const notes = await this.dbService.getNotesByWalletAndChainId(wallet, chainId);
+
+
+    for (const note of notes) {
+      try {
+        if (note.status === NoteStatus.ACTIVE) {
+          const isValid = await isNoteCommitmentValidOnChain(darkpoolContext.darkPool, note.noteCommitment);
+          if (!isValid) {
+            this.logger.error(`Invalid note commitment ${note.noteCommitment} on chain ${chainId}`);
+            this.dbService.updateNoteCreatedByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+          } else {
+            const isSpent = await isNoteSpent(
+              darkpoolContext.darkPool,
+              {
+                note: note.noteCommitment,
+                rho: note.rho,
+                amount: note.amount,
+                asset: note.asset
+              },
+              darkpoolContext.signature);
+            if (isSpent) {
+              this.dbService.updateNoteSpentByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+            }
+          }
+        } else if (note.status === NoteStatus.CREATED) {
+          const isValid = await isNoteCommitmentValidOnChain(darkpoolContext.darkPool, note.noteCommitment);
+          if (isValid) {
+            this.logger.error(`Invalid note commitment ${note.noteCommitment} on chain ${chainId}`);
+            const isSpent = await isNoteSpent(
+              darkpoolContext.darkPool,
+              {
+                note: note.noteCommitment,
+                rho: note.rho,
+                amount: note.amount,
+                asset: note.asset
+              },
+              darkpoolContext.signature);
+            if (isSpent) {
+              this.dbService.updateNoteSpentByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+            } else {
+              this.dbService.updateNoteActiveByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+            }
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error syncing asset ${note.asset} on chain ${chainId}: ${error.message}`);
+      }
+    }
   }
 }

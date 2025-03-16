@@ -14,6 +14,82 @@ enum EventType {
     Unknown = 0
 }
 
+interface QueuedMessage {
+    data: string;
+}
+
+enum ProcessingState {
+    Idle = 'idle',
+    Processing = 'processing'
+}
+
+const messageQueue: QueuedMessage[] = [];
+let processingState: ProcessingState = ProcessingState.Idle;
+
+async function processMessage(message: QueuedMessage): Promise<void> {
+    try {
+        const settlementService = SettlementService.getInstance();
+        const assetPairService = AssetPairService.getInstance();
+        const notificationEvent = JSON.parse(message.data);
+        const orderService = OrderService.getInstance();
+
+        switch (notificationEvent.eventType) {
+            case EventType.OrderMatched:
+                console.log('Event for order matched: ', notificationEvent.orderId);
+                await settlementService.takerConfirm(notificationEvent.orderId);
+                break;
+            case EventType.OrderConfirmed:
+                console.log('Event for order confirmed: ', notificationEvent.orderId);
+                await settlementService.makerSwap(notificationEvent.orderId);
+                break;
+            case EventType.OrderSettled:
+                console.log('Event for order settled: ', notificationEvent.orderId);
+                await settlementService.takerPostSettlement(notificationEvent.orderId, notificationEvent.txHash || '');
+                break;
+            case EventType.AssetPairCreated:
+                await assetPairService.syncAssetPair(notificationEvent.assetPairId, notificationEvent.chainId);
+                break;
+            case EventType.orderCancelled:
+                await orderService.cancelOrderByNotificaion(notificationEvent.orderId);
+                break;
+            default:
+                console.log('Unknown event:', notificationEvent);
+                break;
+        }
+    } catch (error) {
+        console.log(error.stack, error.message);
+        console.error('Invalid message:', message.data);
+    }
+}
+
+async function processMessageQueue(): Promise<void> {
+    if (processingState === ProcessingState.Processing || messageQueue.length === 0) {
+        return;
+    }
+
+    processingState = ProcessingState.Processing;
+    
+    try {
+        while (messageQueue.length > 0) {
+            const message = messageQueue.shift();
+            if (message) {
+                await processMessage(message);
+            }
+        }
+    } catch (error) {
+        console.error('Error processing message:', error);
+    } finally {
+        processingState = ProcessingState.Idle;
+    }
+}
+
+function enqueueMessage(data: string): void {
+    messageQueue.push({ data });
+    if (processingState === ProcessingState.Idle) {
+        setImmediate(() => processMessageQueue());
+    }
+}
+
 export function startWebSocket() {
     const booknodeUrl = ConfigLoader.getInstance().getConfig().bookNodeSocketUrl;
 
@@ -46,40 +122,9 @@ export function startWebSocket() {
             reconnect();
         });
 
-        ws.on('message', async (data) => {
-            try {
-                const settlementService = SettlementService.getInstance();
-                const assetPairService = AssetPairService.getInstance();
-                const notificationEvent = JSON.parse(data.toString());
-                const orderService = OrderService.getInstance();
-
-                switch (notificationEvent.eventType) {
-                    case EventType.OrderMatched:
-                        console.log('Event for order matched: ', notificationEvent.orderId);
-                        await settlementService.takerConfirm(notificationEvent.orderId);
-                        break;
-                    case EventType.OrderConfirmed:
-                        console.log('Event for order confirmed: ', notificationEvent.orderId);
-                        await settlementService.makerSwap(notificationEvent.orderId);
-                        break;
-                    case EventType.OrderSettled:
-                        console.log('Event for order settled: ', notificationEvent.orderId);
-                        await settlementService.takerPostSettlement(notificationEvent.orderId, notificationEvent.txHash || '');
-                        break;
-                    case EventType.AssetPairCreated:
-                        await assetPairService.syncAssetPair(notificationEvent.assetPairId, notificationEvent.chainId);
-                        break;
-                    case EventType.orderCancelled:
-                        await orderService.cancelOrderByNotificaion(notificationEvent.orderId);
-                        break;
-                    default:
-                        console.log('Unknown event:', notificationEvent);
-                        break;
-                }
-            } catch (error) {
-                console.log(error.stack, error.message);
-                console.error('Invalid message:', data.toString());
-            }
+        ws.on('message', (data) => {
+            console.log('Received message:', data.toString());
+            enqueueMessage(data.toString());
         });
     };
 

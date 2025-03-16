@@ -221,6 +221,20 @@ export class DatabaseService {
     stmt.run(txHash, NoteStatus.ACTIVE, wallet.toLowerCase(), chainId, noteCommitment.toString());
   }
 
+  public async updateNoteCreatedByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
+    const query = `UPDATE NOTES SET status = ? WHERE wallet = ? AND chainId = ? AND noteCommitment = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(NoteStatus.CREATED, wallet.toLowerCase(), chainId, noteCommitment.toString());
+  }
+
+  public async updateNoteActiveByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
+    const query = `UPDATE NOTES SET status = ? WHERE wallet = ? AND chainId = ? AND noteCommitment = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(NoteStatus.ACTIVE, wallet.toLowerCase(), chainId, noteCommitment.toString());
+  }
+
+
+
   public updateNoteSpentByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
     this.updateNoteStatus(wallet, chainId, noteCommitment, NoteStatus.SPENT);
   }
