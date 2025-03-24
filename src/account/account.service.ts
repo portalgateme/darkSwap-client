@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { DatabaseService } from '../common/db/database.service';
 import { NoteStatus } from '../types';
 import { MyAssetsDto } from './dto/asset.dto';
+import { getNoteOnChainStatusBySignature, NoteOnChainStatus } from '@thesingularitynetwork/singularity-sdk';
+import { DarkpoolContext } from '../common/context/darkpool.context';
 
 @Injectable()
 export class AccountService {
@@ -94,5 +96,36 @@ export class AccountService {
     }
 
     return myAssetsArray;
+  }
+
+  async syncAssets(darkpoolContext: DarkpoolContext, wallet: string, chainId: number): Promise<void> {
+    const notes = await this.dbService.getNotesByWalletAndChainId(wallet, chainId);
+
+    for (const note of notes) {
+      try {
+        if (note.status != NoteStatus.SPENT) {
+          const onChainStatus = await getNoteOnChainStatusBySignature(
+            darkpoolContext.darkPool,
+            {
+              note: note.noteCommitment,
+              rho: note.rho,
+              amount: note.amount,
+              asset: note.asset
+            },
+            darkpoolContext.signature);
+          if (onChainStatus == NoteOnChainStatus.ACTIVE && note.status != NoteStatus.ACTIVE) {
+            this.dbService.updateNoteActiveByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+          } else if (onChainStatus == NoteOnChainStatus.LOCKED && note.status != NoteStatus.LOCKED) {
+            this.dbService.updateNoteLockedByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+          } else if (onChainStatus == NoteOnChainStatus.SPENT && note.status != NoteStatus.SPENT) {
+            this.dbService.updateNoteSpentByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+          } else if (onChainStatus == NoteOnChainStatus.UNKNOWN && note.status != NoteStatus.CREATED) {
+            this.dbService.updateNoteCreatedByWalletAndNoteCommitment(wallet, chainId, note.noteCommitment);
+          }
+        }
+      } catch (error) {
+        this.logger.error(`Error syncing asset ${note.asset} on chain ${chainId}: ${error.message}`);
+      }
+    }
   }
 }

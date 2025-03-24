@@ -1,4 +1,4 @@
-import { DarkPool,isAddressCompliant } from "@thesingularitynetwork/singularity-sdk"
+import { DarkPool, isAddressCompliant } from "@thesingularitynetwork/singularity-sdk"
 import { Signer } from "ethers"
 import { getDarkPool } from "../../utils/darkpool"
 import RpcManager from "../../utils/rpcManager"
@@ -9,22 +9,31 @@ export class DarkpoolContext {
     walletAddress: string
     publicKey: string
     darkPool: DarkPool
+    relayerDarkPool: DarkPool
     signature: string
 
-    private constructor(chain: number, wallet: string, signer: Signer, pubKey: string ,darkPool: DarkPool, signature: string) {
+    private constructor(chain: number, wallet: string, signer: Signer, pubKey: string, darkPool: DarkPool, relayerDarkPool: DarkPool, signature: string) {
         this.chainId = chain
         this.walletAddress = wallet
         this.signer = signer
         this.publicKey = pubKey
         this.darkPool = darkPool
+        this.relayerDarkPool = relayerDarkPool
         this.signature = signature
     }
 
     static async createDarkpoolContext(chain: number, wallet: string) {
         const [signer, pubKey] = RpcManager.getInstance().getSignerAndPublicKey(wallet, chain)
+        let swapRelayerSigner = RpcManager.getInstance().getSignerForUserSwapRelayer(chain)
         const darkPool = getDarkPool(chain, signer)
+        let relayerDarkPool = darkPool
+        if (!swapRelayerSigner) {
+            swapRelayerSigner = signer
+        } else {
+            relayerDarkPool = getDarkPool(chain, swapRelayerSigner)
+        }
 
-        if (!isAddressCompliant(wallet,darkPool)) {
+        if (!isAddressCompliant(wallet, darkPool)) {
             throw new Error("Wallet is not compliant")
         }
 
@@ -46,6 +55,6 @@ export class DarkpoolContext {
         };
 
         const signature = await signer.signTypedData(domain, types, value);
-        return new DarkpoolContext(chain, wallet, signer, pubKey, darkPool, signature)
+        return new DarkpoolContext(chain, wallet, signer, pubKey, darkPool, relayerDarkPool, signature)
     }
 } 

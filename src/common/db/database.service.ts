@@ -221,6 +221,20 @@ export class DatabaseService {
     stmt.run(txHash, NoteStatus.ACTIVE, wallet.toLowerCase(), chainId, noteCommitment.toString());
   }
 
+  public async updateNoteCreatedByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
+    const query = `UPDATE NOTES SET status = ? WHERE wallet = ? AND chainId = ? AND noteCommitment = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(NoteStatus.CREATED, wallet.toLowerCase(), chainId, noteCommitment.toString());
+  }
+
+  public async updateNoteActiveByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
+    const query = `UPDATE NOTES SET status = ? WHERE wallet = ? AND chainId = ? AND noteCommitment = ?`;
+    const stmt = this.db.prepare(query);
+    stmt.run(NoteStatus.ACTIVE, wallet.toLowerCase(), chainId, noteCommitment.toString());
+  }
+
+
+
   public updateNoteSpentByWalletAndNoteCommitment(wallet: string, chainId: number, noteCommitment: bigint) {
     this.updateNoteStatus(wallet, chainId, noteCommitment, NoteStatus.SPENT);
   }
@@ -367,6 +381,10 @@ export class DatabaseService {
     const query = `SELECT * FROM ORDERS WHERE orderId = ?`;
     const stmt = this.db.prepare(query);
     const row = stmt.get(orderId) as OrderDto;
+    if (!row) {
+      return null;
+    }
+
     const order = {
       id: row.id,
       orderId: row.orderId,

@@ -3,6 +3,7 @@ import { ApiGenericResponse } from '../common/response.interface';
 import { BaseDto } from '../common/dto/base.dto';
 import { AccountService } from './account.service';
 import { MyAssetsDto } from './dto/asset.dto';
+import { DarkpoolContext } from '../common/context/darkpool.context';
 
 @Controller('account')
 export class AccountController {
@@ -17,5 +18,12 @@ export class AccountController {
   @ApiGenericResponse(MyAssetsDto)
   async getAssetsByChainIdAndWallet(@Body() baseDto: BaseDto): Promise<MyAssetsDto> {
     return this.accountService.getAssetsByChainId(baseDto.wallet, baseDto.chainId);
+  }
+
+
+  @Post('syncAssets')
+  async syncAssets(@Body() baseDto: BaseDto): Promise<void> {
+    const context = await DarkpoolContext.createDarkpoolContext(baseDto.chainId, baseDto.wallet)
+    return this.accountService.syncAssets(context, baseDto.wallet, baseDto.chainId);
   }
 }
