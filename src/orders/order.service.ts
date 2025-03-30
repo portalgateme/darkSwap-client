@@ -7,7 +7,7 @@ import { DarkpoolContext } from '../common/context/darkpool.context';
 import { DatabaseService } from '../common/db/database.service';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
 import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
-import { OrderDirection, OrderStatus } from '../types';
+import { OrderDirection, OrderStatus, NoteStatus } from '../types';
 import { ConfigLoader } from '../utils/configUtil';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
@@ -71,7 +71,7 @@ export class OrderService {
     await this.dbService.addOrderByDto(orderDto);
 
     delete orderDto.noteCommitment;
-    
+
     await this.bookNodeService.createOrder(orderDto);
 
     this.logger.log(`Order created: ${orderDto.orderDirection === OrderDirection.BUY ? 'BUY' : 'SELL'} ${orderDto.orderId} ${orderDto.assetPairId} OUT: ${orderDto.amountOut} IN: ${orderDto.amountIn}`);
@@ -92,7 +92,19 @@ export class OrderService {
 
     const cancelOrderService = new CancelOrderService(darkPoolContext.relayerDarkPool);
 
-    const note = await this.dbService.getNoteByOrderId(orderId);
+    const order = await this.dbService.getOrderByOrderId(orderId);
+    if (!order) {
+      throw new DarkpoolException('Order not found');
+    }
+
+    if (order.status !== OrderStatus.OPEN) {
+      throw new DarkpoolException('Order is not cancellable');
+    }
+
+    const note = await this.dbService.getNoteByCommitment(order.noteCommitment);
+    if (!note) {
+      throw new DarkpoolException('Note not found');
+    }
 
     const noteToProcess = {
       note: note.noteCommitment,
@@ -101,28 +113,33 @@ export class OrderService {
       amount: note.amount
     } as Note;
 
+
+    if (note.status === NoteStatus.LOCKED) {
+
+
+      const { context } = await cancelOrderService.prepare(noteToProcess, darkPoolContext.signature);
+      await cancelOrderService.generateProof(context);
+      const tx = await cancelOrderService.execute(context);
+      const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
+      if (receipt.status !== 1) {
+        throw new DarkpoolException("Order cancellation failed");
+      }
+    }
+
     const cancelOrderDto = {
       orderId: orderId,
       chainId: darkPoolContext.chainId,
       wallet: darkPoolContext.walletAddress
     } as CancelOrderDto;
 
-    const { context } = await cancelOrderService.prepare(noteToProcess, darkPoolContext.signature);
-    await cancelOrderService.generateProof(context);
-    const tx = await cancelOrderService.execute(context);
-    const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
-    if (receipt.status !== 1) {
-      throw new DarkpoolException("Order cancellation failed");
-    }
-    
     await this.dbService.cancelOrder(cancelOrderDto.orderId);
-    if(!byNotification) {
+    if (!byNotification) {
       await this.bookNodeService.cancelOrder(cancelOrderDto);
     }
   }
 
   async cancelOrderByNotificaion(orderId: string) {
-    
+
     const order = await this.dbService.getOrderByOrderId(orderId);
     const darkPoolContext = await DarkpoolContext.createDarkpoolContext(order.chainId, order.wallet);
     await this.cancelOrder(orderId, darkPoolContext, true);
