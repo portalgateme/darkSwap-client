@@ -3,6 +3,20 @@ import { ChainId } from '../types'
 import { hardhatContracts } from './contracts/hardhat'
 import { hardhatArbContracts } from './contracts/hardhatArb'
 
+const confirmationsConfig: { [chainId: number]: number } = {
+  [ChainId.MAINNET]: 12,
+  [ChainId.ARBITRUM_ONE]: 12,
+  [ChainId.BASE]: 12,
+  [ChainId.SEPOLIA]: 6,
+  [ChainId.HARDHAT]: 3,
+  [ChainId.HARDHAT_ARBITRUM]: 3,
+}
+
+const DEFAULT_CONFIRMATIONS = 6;
+
+export function getConfirmations(chainId: number): number {
+  return confirmationsConfig[chainId] || DEFAULT_CONFIRMATIONS;
+}
 
 export const networkConfig: { [chainId: number]: NetworkConfig } = {
   [ChainId.MAINNET]: {

@@ -2,6 +2,7 @@ import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
 import { BatchJoinSplitService, SplitService } from '@thesingularitynetwork/singularity-sdk';
 import { DarkpoolContext } from './context/darkpool.context';
 import { DatabaseService } from './db/database.service';
+import { getConfirmations } from 'src/config/networkConfig';
 
 export class NoteBatchJoinSplitService {
   private static instance: NoteBatchJoinSplitService;
@@ -35,7 +36,7 @@ export class NoteBatchJoinSplitService {
     }
     await splitservice.generateProof(splitContext);
     const tx = await splitservice.execute(splitContext);
-    await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
+    await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
 
     this.dbService.updateNoteSpentByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, note.note);
 
@@ -64,7 +65,7 @@ export class NoteBatchJoinSplitService {
 
     await batchJoinSplitService.generateProof(context);
     const tx = await batchJoinSplitService.execute(context);
-    await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
+    await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
     for (const note of notesToJoin) {
       this.dbService.updateNoteSpentByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, note.note);
     }
