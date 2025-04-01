@@ -3,6 +3,7 @@ import { DepositService, Token, WithdrawService, isAddressCompliant } from '@the
 import { DarkpoolContext } from '../common/context/darkpool.context';
 import { DatabaseService } from '../common/db/database.service';
 import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
+import { getConfirmations } from 'src/config/networkConfig';
 
 @Injectable()
 export class BasicService {
@@ -36,7 +37,7 @@ export class BasicService {
       '')
     await depositService.generateProof(context);
     const tx = await depositService.execute(context);
-    const receipt = await darkPoolContext.darkPool.provider.waitForTransaction(tx);
+    const receipt = await darkPoolContext.darkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
     if (receipt.status !== 1) {
       throw new Error("Deposit failed");
     }

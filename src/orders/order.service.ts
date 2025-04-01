@@ -13,6 +13,7 @@ import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
 import { UpdatePriceDto } from './dto/updatePrice.dto';
 import { DarkpoolException } from '../exception/darkpool.exception';
+import { getConfirmations } from 'src/config/networkConfig';
 
 
 @Injectable()
@@ -53,7 +54,7 @@ export class OrderService {
     const { context } = await createMakerOrderService.prepare(noteForOrder, darkPoolContext.signature);
     await createMakerOrderService.generateProof(context);
     const tx = await createMakerOrderService.execute(context);
-    const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
+    const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
     if (receipt.status !== 1) {
       throw new DarkpoolException("Order creation failed");
     }
@@ -120,10 +121,12 @@ export class OrderService {
       const { context } = await cancelOrderService.prepare(noteToProcess, darkPoolContext.signature);
       await cancelOrderService.generateProof(context);
       const tx = await cancelOrderService.execute(context);
-      const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
+      const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
       if (receipt.status !== 1) {
         throw new DarkpoolException("Order cancellation failed");
       }
+
+      await this.dbService.updateNoteActiveByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, note.noteCommitment);
     }
 
     const cancelOrderDto = {

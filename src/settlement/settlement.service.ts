@@ -9,6 +9,7 @@ import { SettlementDto } from './dto/settlement.dto';
 import { TakerConfirmDto } from './dto/takerConfirm.dto';
 import { NoteService } from '../common/note.service';
 import { DarkpoolException } from '../exception/darkpool.exception';
+import { getConfirmations } from 'src/config/networkConfig';
 
 export class SettlementService {
 
@@ -82,7 +83,7 @@ export class SettlementService {
 
     await makerSwapService.generateProof(context);
     const tx = await makerSwapService.execute(context);
-    const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx);
+    const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
     if (receipt.status !== 1) {
       throw new Error("Maker swap failed");
     }
