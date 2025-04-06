@@ -14,7 +14,7 @@ export default {
             noteCommitment TEXT NOT NULL, 
             rho TEXT NOT NULL, 
             asset TEXT NOT NULL, 
-            amount NUMERIC NOT NULL,
+            amount TEXT NOT NULL,
             status INTEGER NOT NULL,
             txHashCreated TEXT,
             createdAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

@@ -90,7 +90,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset.toLowerCase(),
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));
@@ -112,7 +112,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset.toLowerCase(),
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));
@@ -134,7 +134,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated
     }));
@@ -155,7 +155,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated
     };
@@ -175,7 +175,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated
     };
@@ -196,7 +196,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));

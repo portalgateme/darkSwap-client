@@ -86,7 +86,7 @@ export class NoteBatchJoinSplitService {
         asset: note.asset,
         amount: note.amount
       } as Note;
-    });
+    }).sort((a, b) => a.amount < b.amount ? 1 : -1);
 
     return this.notesJoinSplit(notesToProcess, darkPoolContext, amount);
   }
