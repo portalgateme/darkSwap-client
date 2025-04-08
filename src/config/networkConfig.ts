@@ -132,7 +132,7 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     sablierLinearAssetManager: '0x6667889310308C9537B53ea64B01036D73B299Fb',
     oTCSwapAssetManager: '0xD3070435b0cF2D8D31Ea5A45cF32805e540D9407',
     batchJoinSplitAssetManager: '0x1CfA61D3aF6664967B006796137bA97bde41F4cc',
-    darkPoolSwapAssetManager: '0xbd5636Aa3fC783dF06F796e05E56d6edD9eCC070',
+    darkPoolSwapAssetManager: '0x802ae625C2bdac1873B8bbb709679CC401F57abc',
     drakpoolSubgraphUrl: '',
     explorerUrl: {
       tx: 'https://sepolia.etherscan.io/tx/',
