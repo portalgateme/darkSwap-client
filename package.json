@@ -4,9 +4,9 @@
   "description": "A dark pool client with RESTful API and order management",
   "main": "dist/main.js",
   "scripts": {
-    "start": "node dist/main.js",
+    "start": "node dist/main.js config=./config.yaml",
     "build": "tsc",
-    "start:dev": "NODE_ENV=dev nest start --watch",
+    "start:dev": "NODE_ENV=dev nest start --watch -- config=./config.yaml",
     "lint": "eslint '{src,test}/**/*.ts'",
     "test": "jest",
     "docker:build": "docker build -t singularity-pro ."

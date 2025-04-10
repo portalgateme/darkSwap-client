@@ -1,4 +1,3 @@
-import { join } from "path";
 import * as fs from 'fs';
 import * as yaml from 'js-yaml';
 import { z } from 'zod';
@@ -14,9 +13,25 @@ export class ConfigLoader {
         this.loadConfig();
     }
 
+    private parseCommandLineArgs(): string | null {
+        const args = process.argv.slice(2);
+        for (let i = 0; i < args.length; i++) {
+            const [key, value] = args[i].split('=');
+            if (key === 'config') {
+                return value;
+            }
+        }
+        return null;
+    }
+
     private loadConfig() {
         try {
-            const configPath = process.env.NODE_ENV === 'dev' ? './config.yaml' : '/data/config.yaml';
+            const cliConfigPath = this.parseCommandLineArgs();
+            if (!cliConfigPath) {
+                throw new Error("Config file path not specified, please use --config parameter to specify the config file path");
+            }
+            
+            const configPath = cliConfigPath;
 
             const fileContent = fs.readFileSync(configPath, 'utf8');
             this.config = yaml.load(fileContent);
