@@ -18,6 +18,10 @@ const ChainRpcSchema = z.object({
   rpcUrl: z.string().url()
 });
 
+const ProofOptionsSchema = z.object({
+  threads: z.number().optional(),
+  memory: z.number().optional()
+});
 
 const dbFilePathScema = z.string().nonempty();
 const bookNodeSocketUrlScema = z.string().url();
@@ -35,7 +39,8 @@ export const ConfigSchema = z.object({
   bookNodeApiUrl: bookNodeApiUrlSchema,
   bookNodeApiKey: bookNodeApiKeySchema,
   userSwapRelayerAddress: userSwapRelayerAddressSchema,
-  userSwapRelayerPrivateKey: userSwapRelayerPrivateKeySchema
+  userSwapRelayerPrivateKey: userSwapRelayerPrivateKeySchema,
+  proofOptions: ProofOptionsSchema.optional()
 });
 
 export function validateConfig(config: unknown) {

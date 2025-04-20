@@ -3,10 +3,20 @@ import { Signer } from "ethers"
 import { networkConfig } from "../config/networkConfig"
 import { relayerConfig } from "../config/relayerConfig"
 import { stakingTokenConfig } from "../config/stakingConfig"
+import { ConfigLoader } from "./configUtil"
 
 export function getDarkPool(chainId: number, signer: Signer) {
     if (!networkConfig[chainId]) {
         throw new Error(`ChainId ${chainId} not supported`)
+    }
+
+    const proofOptionConfig = ConfigLoader.getInstance().getConfig().proofOptions;
+    let proofOptions;
+    if (proofOptionConfig && proofOptionConfig.threads && proofOptionConfig.memory) {
+        proofOptions = {
+            threads: proofOptionConfig.threads,
+            memory: proofOptionConfig.memory
+        }
     }
 
     const darkPool = new DarkPool(
@@ -27,7 +37,8 @@ export function getDarkPool(chainId: number, signer: Signer) {
             batchJoinSplitAssetManager: networkConfig[chainId].batchJoinSplitAssetManager,
             darkpoolSwapAssetManager: networkConfig[chainId].darkPoolSwapAssetManager,
         },
-        stakingTokenConfig[chainId]
+        stakingTokenConfig[chainId],
+        proofOptions
     )
 
     return darkPool

@@ -25,3 +25,7 @@ bookNodeApiKey: "CONTACT-US-FOR-API-KEY"
 #optional
 #userSwapRelayerAddress: 
 #userSwapRelayerPrivateKey: 
+
+#proofOptions:
+#  threads: 10
+#  memory: 8192
