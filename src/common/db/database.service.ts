@@ -5,6 +5,7 @@ import { AssetPairDto } from '../dto/assetPair.dto';
 import { OrderDto } from '../../orders/dto/order.dto';
 import { ConfigLoader } from '../../utils/configUtil';
 import { NoteStatus, OrderStatus } from '../../types';
+import { OrderEventDto } from '../../orders/dto/orderEvent.dto';
 
 
 interface NoteEntity {
@@ -75,6 +76,28 @@ export class DatabaseService {
     return Number(result.lastInsertRowid);
   }
 
+  public async getNotesByWalletAndChainIdAndAsset(walletAddress: string, chainId: number, asset: string): Promise<NoteDto[]> {
+    const query = `SELECT * FROM NOTES WHERE wallet = ? AND chainId = ? AND asset = ? AND (status = ? OR status = ?)`;
+    const stmt = this.db.prepare(query);
+    const rows = stmt.all(walletAddress.toLowerCase(), chainId, asset.toLowerCase(), NoteStatus.ACTIVE, NoteStatus.LOCKED) as NoteEntity[];
+
+    const notes = rows.map(row => ({
+      id: row.id,
+      chainId: row.chainId,
+      publicKey: row.publicKey,
+      wallet: row.wallet,
+      type: row.type,
+      noteCommitment: BigInt(row.noteCommitment),
+      rho: BigInt(row.rho),
+      asset: row.asset.toLowerCase(),
+      amount: BigInt(row.amount.toString()),
+      status: row.status,
+      txHashCreated: row.txHashCreated,
+    }));
+
+    return notes;
+  }
+
   public async getNotesByWalletAndChainId(walletAddress: string, chainId: number): Promise<NoteDto[]> {
     const query = `SELECT * FROM NOTES WHERE wallet = ? AND chainId = ? AND (status = ? OR status = ?)`;
     const stmt = this.db.prepare(query);
@@ -89,7 +112,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset.toLowerCase(),
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));
@@ -111,7 +134,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset.toLowerCase(),
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));
@@ -133,7 +156,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated
     }));
@@ -154,7 +177,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated
     };
@@ -174,7 +197,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated
     };
@@ -195,7 +218,7 @@ export class DatabaseService {
       noteCommitment: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset,
-      amount: BigInt(row.amount),
+      amount: BigInt(row.amount.toString()),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));
@@ -435,6 +458,62 @@ export class DatabaseService {
     stmt.run(txHash, orderId);
   }
 
+  public async addOrderEvent(chainId: number, orderId: string, wallet: string, status: number): Promise<number> {
+    const stmt = this.db.prepare(`
+      INSERT INTO ORDER_EVENTS (orderId, wallet, chainId, status)
+      VALUES (?, ?, ?, ?)
+      ON CONFLICT DO NOTHING
+    `);
+    
+    const result = stmt.run(
+      orderId,
+      wallet.toLowerCase(),
+      chainId,
+      status
+    );
+    
+    return result.lastInsertRowid as number;
+  }
+
+  public async getOrderEventsByOrderId(orderId: string): Promise<OrderEventDto[]> {
+    const stmt = this.db.prepare(`
+      SELECT id, createdAt, orderId, wallet, chainId, status
+      FROM ORDER_EVENTS
+      WHERE orderId = ?
+      ORDER BY createdAt DESC
+    `);
+    
+    const rows = stmt.all(orderId) as any[];
+    
+    return rows.map(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      orderId: row.orderId,
+      wallet: row.wallet,
+      chainId: row.chainId,
+      status: row.status
+    }));
+  }
+
+  public async getIncrementalOrderEvents(lastEventId: number): Promise<OrderEventDto[]> {
+    const stmt = this.db.prepare(`
+      SELECT id, createdAt, orderId, wallet, chainId, status
+      FROM ORDER_EVENTS
+      WHERE id > ?
+      ORDER BY id
+    `);
+
+    const rows = stmt.all(lastEventId) as any[];
+
+    return rows.map(row => ({
+      id: row.id,
+      createdAt: row.createdAt,
+      orderId: row.orderId,
+      wallet: row.wallet,
+      chainId: row.chainId,
+      status: row.status
+    }));
+  }
 }
 
 export default DatabaseService;

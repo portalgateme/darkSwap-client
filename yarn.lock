@@ -1134,10 +1134,10 @@
   dependencies:
     "@sinonjs/commons" "^3.0.0"
 
-"@thesingularitynetwork/darkpool-v1-proof@^0.2.38":
-  version "0.2.38"
-  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkpool-v1-proof/-/darkpool-v1-proof-0.2.38.tgz#11270d922dd11ec20a7fc642787f255b340421f3"
-  integrity sha512-WmsooXMN325h97jWZ7X3HjK64E0dpD9pE6yh3QAWngC20a9+Z/01FUjD6pxM1q1O1A3PSThYE/kIWSUnqFYAjA==
+"@thesingularitynetwork/darkpool-v1-proof@^0.2.40":
+  version "0.2.40"
+  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkpool-v1-proof/-/darkpool-v1-proof-0.2.40.tgz#74cff32ae34d05037cf2a1362aa1907d71e81876"
+  integrity sha512-usal+zPHs/7vVm711swPZ2sq+KilUCdoYA+PxEwdpFYDJhracWpKHf5OZKYH/0pIivl4iinkPeZj8dC53uQVGg==
   dependencies:
     "@aztec/bb.js" "^0.30.0"
     "@ethersproject/abi" "^5.7.0"
@@ -1149,14 +1149,14 @@
     "@noir-lang/types" "^0.28.0"
     buffer "^6.0.3"
 
-"@thesingularitynetwork/singularity-sdk@^0.0.39":
-  version "0.0.39"
-  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/singularity-sdk/-/singularity-sdk-0.0.39.tgz#29934fe14d04399b1a704a718c8fd3578af1e23f"
-  integrity sha512-T1gN+OoM9jqhXWTx3Of+MPQ8XxifnBOQqM0nNn9LOlE7i9YFQm1HwUb3R66KSd1nON61PluiPGeRfwqYn1mqHw==
+"@thesingularitynetwork/singularity-sdk@^0.0.44":
+  version "0.0.44"
+  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/singularity-sdk/-/singularity-sdk-0.0.44.tgz#964ac503f38f54f6fd512b73f9a823494d3d44df"
+  integrity sha512-7G7ads85QYFVWDYVeWV6B7YZnsP8aVH5GA51EEUNgBBvq3RjjsWuR7DpjzZBp3EAUWy9lcOFqJM5Jg/jiumuBg==
   dependencies:
     "@ethersproject/abi" "^5.0.12"
     "@ethersproject/solidity" "^5.0.9"
-    "@thesingularitynetwork/darkpool-v1-proof" "^0.2.38"
+    "@thesingularitynetwork/darkpool-v1-proof" "^0.2.40"
     axios "^1.6.8"
     ethers "^6.13.4"
     lodash "^4.17.21"

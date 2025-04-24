@@ -1,19 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
 import { CancelOrderService, CreateMakerOrderService } from '@thesingularitynetwork/singularity-sdk';
-import { BooknodeService } from '../common/booknode.service';
 import { v4 } from 'uuid';
+import { BooknodeService } from '../common/booknode.service';
 import { DarkpoolContext } from '../common/context/darkpool.context';
 import { DatabaseService } from '../common/db/database.service';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
 import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
-import { OrderDirection, OrderStatus, NoteStatus } from '../types';
-import { ConfigLoader } from '../utils/configUtil';
+import { getConfirmations } from '../config/networkConfig';
+import { DarkpoolException } from '../exception/darkpool.exception';
+import { NoteStatus, OrderDirection, OrderStatus } from '../types';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
 import { UpdatePriceDto } from './dto/updatePrice.dto';
-import { DarkpoolException } from '../exception/darkpool.exception';
-import { getConfirmations } from 'src/config/networkConfig';
+import { OrderEventService } from './orderEvent.service';
 
 
 @Injectable()
@@ -24,14 +24,14 @@ export class OrderService {
   private static instance: OrderService;
   private dbService: DatabaseService;
   private noteBatchJoinSplitService: NoteBatchJoinSplitService;
-  private configLoader: ConfigLoader;
   private bookNodeService: BooknodeService;
-
+  private orderEventService: OrderEventService;
+  
   public constructor() {
     this.dbService = DatabaseService.getInstance();
     this.noteBatchJoinSplitService = NoteBatchJoinSplitService.getInstance();
-    this.configLoader = ConfigLoader.getInstance();
     this.bookNodeService = BooknodeService.getInstance();
+    this.orderEventService = OrderEventService.getInstance();
   }
 
   public static getInstance(): OrderService {
@@ -75,6 +75,13 @@ export class OrderService {
 
     await this.bookNodeService.createOrder(orderDto);
 
+    await OrderEventService.getInstance().logOrderStatusChange(
+      orderDto.orderId,
+      darkPoolContext.walletAddress,
+      darkPoolContext.chainId,
+      OrderStatus.OPEN
+    );
+
     this.logger.log(`Order created: ${orderDto.orderDirection === OrderDirection.BUY ? 'BUY' : 'SELL'} ${orderDto.orderId} ${orderDto.assetPairId} OUT: ${orderDto.amountOut} IN: ${orderDto.amountIn}`);
   }
 
@@ -82,9 +89,11 @@ export class OrderService {
     const order = await this.dbService.getOrderByOrderId(updatePriceDto.orderId);
     if (!order) {
       throw new DarkpoolException('Order not found');
+    } else if (order.status != OrderStatus.OPEN) {
+      throw new DarkpoolException('Order is not in open status');
     }
-    await this.dbService.updateOrderPrice(updatePriceDto.orderId, updatePriceDto.price, BigInt(order.amountIn), BigInt(order.partialAmountIn));
     await this.bookNodeService.updateOrderPrice(updatePriceDto);
+    await this.dbService.updateOrderPrice(updatePriceDto.orderId, updatePriceDto.price, BigInt(updatePriceDto.amountIn), BigInt(updatePriceDto.partialAmountIn));
     return true;
   }
 
@@ -139,6 +148,13 @@ export class OrderService {
     if (!byNotification) {
       await this.bookNodeService.cancelOrder(cancelOrderDto);
     }
+    
+    await this.orderEventService.logOrderStatusChange(
+      orderId,
+      darkPoolContext.walletAddress,
+      darkPoolContext.chainId,
+      OrderStatus.CANCELLED
+    );
   }
 
   async cancelOrderByNotificaion(orderId: string) {

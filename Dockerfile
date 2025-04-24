@@ -1,4 +1,4 @@
-FROM node:23.7.0
+FROM node:18.20.6
 
 WORKDIR /app
 
@@ -12,4 +12,4 @@ RUN rm -rf ./src
 
 EXPOSE 3002
 
-CMD ["node", "/app/dist/main.js"]
+CMD ["node", "/app/dist/main.js", "config=/config/config.yaml"]
