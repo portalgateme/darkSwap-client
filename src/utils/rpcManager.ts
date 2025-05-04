@@ -1,5 +1,8 @@
 import { ethers } from 'ethers';
 import { ConfigLoader } from './configUtil';
+import { WalletConfig } from './configValidator';
+import { DarkpoolException } from '../exception/darkpool.exception';
+import { GoogleKmsSigner } from '../signer/gcpKmsSigner';
 
 class RpcManager {
   private static instance: RpcManager;
@@ -63,11 +66,49 @@ class RpcManager {
     }
 
     const provider = this.getProvider(chainId);
-    const signer = new ethers.Wallet(wallet.privateKey, provider);
-    const publicKey = ethers.SigningKey.computePublicKey(wallet.privateKey, true);
+    let signer: ethers.Signer;
+    if (wallet.type === 'privateKey') {
+      signer = this.getSignerForPrivateKey(wallet, provider);
+    } else if (wallet.type === 'gcpKms') {
+      signer = this.getSignerForGcpKms(wallet, provider);
+    } else if (wallet.type === 'awsKms') {
+      signer = this.getSignerForAwsKms(wallet, provider);
+    } else {
+      throw new DarkpoolException('Invalid wallet type');
+    }
+    const publicKey = "0x";
     this.signers.set(key, [signer, publicKey]);
     return [signer, publicKey];
   }
+
+  private getSignerForPrivateKey(wallet: WalletConfig, provider: ethers.JsonRpcProvider): ethers.Signer {
+    if (wallet.type === 'privateKey') {
+      return new ethers.Wallet(wallet.privateKey, provider);
+    }
+    throw new DarkpoolException('Invalid wallet type');
+  }
+
+  private getSignerForGcpKms(wallet: WalletConfig, provider: ethers.JsonRpcProvider): ethers.Signer {
+    if (wallet.type === 'gcpKms') {
+      const signer = new GoogleKmsSigner({
+        projectId: wallet.projectId,
+        locationId: wallet.locationId,
+        keyRingId: wallet.keyRingId,
+        cryptoKeyId: wallet.keyId,
+        versionId: wallet.versionId,
+        credentialsPath: wallet.credentialsPath
+      }, provider)
+      return signer;
+    }
+    throw new DarkpoolException('Invalid wallet type');
+  }
+
+  private getSignerForAwsKms(wallet: WalletConfig, provider: ethers.JsonRpcProvider): ethers.Signer {
+
+    throw new DarkpoolException('Not implemented');
+  }
+
+
 
   public reloadProviders() {
     this.providers.clear();

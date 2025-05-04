@@ -1,10 +1,31 @@
 import { z } from 'zod';
 
-const WalletSchema = z.object({
-  name: z.string(),
-  address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  privateKey: z.string().regex(/^0x[a-fA-F0-9]{64}$/)
-});
+const WalletSchema = z.discriminatedUnion('type', [
+  z.object({
+    type: z.literal('privateKey'),
+    name: z.string(),
+    address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    privateKey: z.string().regex(/^0x[a-fA-F0-9]{64}$/)
+  }),
+  z.object({
+    type: z.literal('gcpKms'),
+    name: z.string(),
+    address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    projectId: z.string(),
+    locationId: z.string(),
+    keyRingId: z.string(),
+    keyId: z.string(),
+    versionId: z.string(),
+    credentialsPath: z.string().optional()
+  }),
+  z.object({
+    type: z.literal('awsKms'),
+    name: z.string(),
+    address: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
+    region: z.string(),
+    keyId: z.string()
+  })
+]);
 
 const RelayerSchema = z.object({
   relayerName: z.string(),
