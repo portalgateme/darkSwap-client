@@ -168,7 +168,7 @@ export class SettlementService {
     const swapInAsset = orderNote.asset === assetPair.quoteAddress? assetPair.baseAddress : assetPair.quoteAddress;
 
     const darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
-    const {darkSwapMessage, swapInNote} = await ProSwapService.prepareProSwapMessageForBob(
+    const darkSwapMessage = await ProSwapService.prepareProSwapMessageForBob(
       darkSwapContext.walletAddress,
       orderNote,
       BigInt(orderInfo.amountIn),
@@ -176,7 +176,7 @@ export class SettlementService {
       darkSwapContext.signature
     );
 
-    this.noteService.addNote(swapInNote, darkSwapContext,false);
+    this.noteService.addNote(darkSwapMessage.inNote, darkSwapContext,false);
 
     const bobConfirmDto = {
       chainId: orderInfo.chainId,
