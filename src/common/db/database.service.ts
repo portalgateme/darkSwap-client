@@ -90,7 +90,7 @@ export class DatabaseService {
       note: BigInt(row.noteCommitment),
       rho: BigInt(row.rho),
       asset: row.asset.toLowerCase(),
-      amount: BigInt(row.amount.toString()),
+      amount: BigInt(row.amount),
       status: row.status,
       txHashCreated: row.txHashCreated,
     }));

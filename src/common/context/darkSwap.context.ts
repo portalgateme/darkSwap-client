@@ -1,5 +1,5 @@
 import { DarkSwap } from "@thesingularitynetwork/darkswap-sdk"
-import { Signer } from "ethers"
+import { getAddress, Signer } from "ethers"
 import { getDarkSwap } from "../../utils/darkSwap"
 import RpcManager from "../../utils/rpcManager"
 
@@ -20,7 +20,8 @@ export class DarkSwapContext {
         this.signature = signature
     }
 
-    static async createDarkSwapContext(chain: number, wallet: string) {
+    static async createDarkSwapContext(chain: number, walletIn: string) {
+        const wallet = getAddress(walletIn.toLowerCase());
         const [signer, pubKey] = RpcManager.getInstance().getSignerAndPublicKey(wallet, chain)
         const darkSwap = getDarkSwap(chain, signer)
 

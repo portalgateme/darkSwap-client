@@ -31,7 +31,7 @@ export class BasicService {
     const { context, newBalanceNote } = await depositService.prepare(
       currentBalanceNote, asset.address, BigInt(amount), darkSwapContext.walletAddress, darkSwapContext.signature);
 
-    await this.noteService.addNote(newBalanceNote, darkSwapContext, false);
+    this.noteService.addNote(newBalanceNote, darkSwapContext, false);
 
     const tx = await depositService.execute(context);
 

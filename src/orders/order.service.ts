@@ -1,5 +1,5 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DarkSwapOrderNote, DarkSwapNote, ProCancelOrderService, ProCreateOrderService} from '@thesingularitynetwork/darkswap-sdk';
+import { DarkSwapOrderNote, DarkSwapNote, ProCancelOrderService, ProCreateOrderService } from '@thesingularitynetwork/darkswap-sdk';
 import { v4 } from 'uuid';
 import { BooknodeService } from '../common/booknode.service';
 import { DarkSwapContext } from '../common/context/darkSwap.context';
@@ -61,30 +61,31 @@ export class OrderService {
   }
 
   async createOrder(orderDto: OrderDto, darkSwapContext: DarkSwapContext) {
-    const proCreateOrderService = new ProCreateOrderService(darkSwapContext.darkSwap);
-
     const assetPair = await this.dbService.getAssetPairById(orderDto.assetPairId, orderDto.chainId);
     const outAsset = orderDto.orderDirection === OrderDirection.BUY ? assetPair.quoteAddress : assetPair.baseAddress;
     const inAsset = orderDto.orderDirection === OrderDirection.BUY ? assetPair.baseAddress : assetPair.quoteAddress;
 
-    const noteForOrder = await this.notesJoinService.getCurrentBalanceNote(darkSwapContext,outAsset)
+    const currentBalance = await this.notesJoinService.getCurrentBalanceNote(darkSwapContext, outAsset);
 
+    if (currentBalance.amount < BigInt(orderDto.amountOut)) {
+      throw new DarkSwapException(`Insufficient Asset ${outAsset}`);
+    }
 
-      if (noteForOrder.amount < BigInt(orderDto.amountOut)) {
-        throw new DarkSwapException(`Insufficient Asset ${outAsset}`);
-      }
-
-
-
+    const proCreateOrderService = new ProCreateOrderService(darkSwapContext.darkSwap);
     const { context, orderNote, newBalance } = await proCreateOrderService.prepare(
       darkSwapContext.walletAddress,
       outAsset,
       BigInt(orderDto.amountOut),
       inAsset,
       BigInt(orderDto.amountIn),
-      noteForOrder,
+      currentBalance,
       darkSwapContext.signature
     );
+    this.noteService.addNote(orderNote, darkSwapContext, true);
+    if (newBalance.amount > 0n) {
+      this.noteService.addNote(newBalance, darkSwapContext, false);
+    }
+
     const mutex = this.walletMutexService.getMutex(darkSwapContext.walletAddress.toLowerCase());
     const tx = await mutex.runExclusive(async () => {
       return await proCreateOrderService.execute(context);
@@ -93,11 +94,11 @@ export class OrderService {
     if (receipt.status !== 1) {
       throw new DarkSwapException("Order creation failed");
     }
-    this.noteService.setNoteUsed(orderNote, darkSwapContext)
-    this.noteService.addNote(orderNote, darkSwapContext, true, tx);
+    this.noteService.setNoteUsed(currentBalance, darkSwapContext);
+    this.noteService.setNoteActive(orderNote, darkSwapContext, tx);
 
     if (newBalance.amount > 0n) {
-      this.noteService.addNote(newBalance, darkSwapContext, true, tx);
+      this.noteService.setNoteActive(newBalance, darkSwapContext, tx);
     }
 
     if (!orderDto.orderId) {
@@ -112,7 +113,7 @@ export class OrderService {
     } else {
       orderDto.status = OrderStatus.OPEN;
     }
-    
+
     orderDto.noteCommitment = orderNote.note.toString();
     orderDto.nullifier = orderNote.nullifier.toString();
     orderDto.feeRatio = orderNote.feeRatio.toString();
@@ -177,13 +178,13 @@ export class OrderService {
 
 
 
-    const{context, newBalance} =  await proCancelOrderService.prepare(
+    const { context, newBalance } = await proCancelOrderService.prepare(
       darkSwapContext.walletAddress,
       noteToProcess,
       currentBalanceNote,
       darkSwapContext.signature
     );
-      
+
     const mutex = this.walletMutexService.getMutex(darkSwapContext.walletAddress.toLowerCase());
     const tx = await mutex.runExclusive(async () => {
       return await proCancelOrderService.execute(context);
@@ -215,7 +216,7 @@ export class OrderService {
     );
   }
 
-  async cancelOrderByNotificaion(orderInfo:  OrderDto) {
+  async cancelOrderByNotificaion(orderInfo: OrderDto) {
 
     const darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
     await this.cancelOrder(orderInfo.orderId, darkSwapContext, true);

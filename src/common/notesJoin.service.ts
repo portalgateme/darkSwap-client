@@ -105,8 +105,6 @@ export class NotesJoinService {
   public async getCurrentBalanceNote(
     context: DarkSwapContext, asset: string, notesToJoin?: DarkSwapNote[]): Promise<DarkSwapNote> {
 
-    let currentBalanceNote: DarkSwapNote = EMPTY_NOTE;
-
     const darkSwapNotes: DarkSwapNote[] = this.dbService.getAssetNotesByWalletAndChainIdAndAsset(
       context.walletAddress,
       context.chainId,
@@ -124,15 +122,11 @@ export class NotesJoinService {
     }
 
     if (darkSwapNotes.length > 1) {
-      currentBalanceNote = await this.notesJoins(darkSwapNotes, context)
+      return await this.notesJoins(darkSwapNotes, context)
     } else if (darkSwapNotes.length === 1) {
-      currentBalanceNote.note = darkSwapNotes[0].note;
-      currentBalanceNote.rho = darkSwapNotes[0].rho;
-      currentBalanceNote.asset = darkSwapNotes[0].asset;
-      currentBalanceNote.amount = darkSwapNotes[0].amount;
+      return darkSwapNotes[0];
+    } else {
+      return EMPTY_NOTE;
     }
-
-    return currentBalanceNote;
   }
-
 }
