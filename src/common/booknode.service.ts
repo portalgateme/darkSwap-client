@@ -2,24 +2,25 @@ import axios from 'axios';
 import { CancelOrderDto } from '../orders/dto/cancelOrder.dto';
 import { MatchedOrderDto } from '../settlement/dto/matchedOder.dto';
 import { SettlementDto } from '../settlement/dto/settlement.dto';
-import { TakerConfirmDto } from '../settlement/dto/takerConfirm.dto';
+import { bobConfirmDto } from '../settlement/dto/bobConfirm.dto';
 import { ConfigLoader } from '../utils/configUtil';
 import { UpdatePriceDto } from '../orders/dto/updatePrice.dto';
 import { OrderDto } from '../orders/dto/order.dto';
-import { DarkpoolException } from '../exception/darkpool.exception';
+import { DarkSwapException } from '../exception/darkSwap.exception';
+import { OrderType } from '../types';
 
 interface BookNodeMatchedOrder {
     orderId: string;
     chainId: number;
     assetPairId: string;
     orderDirection: number;
-    isMaker: boolean;
+    isAlice: boolean;
     matchedPrice: number;
-    makerAmount: string;
-    makerMatchedAmount: string;
-    takerMatchedAmount: string;
-    makerPublicKey: string;
-    takerSwapMessage: string;
+    aliceAmount: string;
+    aliceMatchedAmount: string;
+    bobMatchedAmount: string;
+    alicePublicKey: string;
+    bobSwapMessage: string;
 }
 
 interface BookNodeCreateOrderDto {
@@ -31,6 +32,7 @@ interface BookNodeCreateOrderDto {
     orderType: number;
     timeInForce: number;
     stpMode: number;
+    orderTriggerPrice: number;
     price: number;
     amountOut: string;
     amountIn: string;
@@ -78,7 +80,7 @@ export class BooknodeService {
             return result;
         } catch (error) {
             console.error('Error in sendPutRequest:', error.response ? error.response.data : error.message);
-            throw new DarkpoolException(`Failed to send request to booknode for url: ${url}`);
+            throw new DarkSwapException(`Failed to send request to booknode for url: ${url}`);
         }
     }
 
@@ -93,11 +95,15 @@ export class BooknodeService {
             return result;
         } catch (error) {
             console.error('Error in sendRequest:', error.response ? error.response.data : error.message);
-            throw new DarkpoolException(`Failed to send request to booknode for url: ${url}`);
+            throw new DarkSwapException(`Failed to send request to booknode for url: ${url}`);
         }
     }
 
-    public async getMatchedOrderDetails(settlementDto: SettlementDto): Promise<MatchedOrderDto> {
+    public async getMatchedOrderDetails(order: OrderDto): Promise<MatchedOrderDto> {
+        const settlementDto = new SettlementDto();
+        settlementDto.orderId = order.orderId;
+        settlementDto.wallet = order.wallet;
+        settlementDto.chainId = order.chainId;
         const result = await this.sendRequest(settlementDto, '/api/orders/matchdetails');
         const bookNodeMathedOrderDetail = result.data.data as BookNodeMatchedOrder;
         return {
@@ -105,15 +111,23 @@ export class BooknodeService {
             chainId: bookNodeMathedOrderDetail.chainId,
             assetPairId: bookNodeMathedOrderDetail.assetPairId,
             orderDirection: bookNodeMathedOrderDetail.orderDirection,
-            isMaker: bookNodeMathedOrderDetail.isMaker,
-            makerAmount: BigInt(bookNodeMathedOrderDetail.makerAmount),
-            makerMatchedAmount: BigInt(bookNodeMathedOrderDetail.makerMatchedAmount),
-            takerMatchedAmount: BigInt(bookNodeMathedOrderDetail.takerMatchedAmount),
-            takerSwapMessage: bookNodeMathedOrderDetail.takerSwapMessage
+            isAlice: bookNodeMathedOrderDetail.isAlice,
+            aliceAmount: BigInt(bookNodeMathedOrderDetail.aliceAmount),
+            aliceMatchedAmount: BigInt(bookNodeMathedOrderDetail.bobMatchedAmount),
+            bobMatchedAmount: BigInt(bookNodeMathedOrderDetail.bobMatchedAmount),
+            bobSwapMessage: bookNodeMathedOrderDetail.bobSwapMessage
         } as MatchedOrderDto;
     }
 
     public async createOrder(orderDto: OrderDto): Promise<any> {
+        let orderTriggerPrice = 0;
+        if (orderDto.orderType === OrderType.STOP_LOSS_LIMIT
+            || orderDto.orderType === OrderType.STOP_LOSS
+            || orderDto.orderType === OrderType.TAKE_PROFIT
+            || orderDto.orderType === OrderType.TAKE_PROFIT_LIMIT) {
+            orderTriggerPrice = Number(orderDto.orderTriggerPrice);
+        }
+
         const createOrderRequestDto: BookNodeCreateOrderDto = {
             chainId: orderDto.chainId,
             wallet: orderDto.wallet,
@@ -123,6 +137,7 @@ export class BooknodeService {
             orderType: orderDto.orderType,
             timeInForce: orderDto.timeInForce,
             stpMode: orderDto.stpMode,
+            orderTriggerPrice: orderTriggerPrice,
             price: Number(orderDto.price),
             amountOut: orderDto.amountOut.toString(),
             amountIn: orderDto.amountIn.toString(),
@@ -140,13 +155,18 @@ export class BooknodeService {
         return result.data;
     }
 
-    public async settleOrder(settlementDto: SettlementDto): Promise<any> {
+    public async settleOrder(order: OrderDto, txHash: string): Promise<any> {
+        const settlementDto = new SettlementDto();
+        settlementDto.orderId = order.orderId;
+        settlementDto.wallet = order.wallet;
+        settlementDto.chainId = order.chainId;
+        settlementDto.txHashSettled = txHash;
         const result = await this.sendRequest(settlementDto, '/api/orders/settle');
         return result.data;
     }
 
-    public async confirmOrder(takerConfirmDto: TakerConfirmDto): Promise<any> {
-        const result = await this.sendRequest(takerConfirmDto, '/api/orders/confirm');
+    public async confirmOrder(recipientConfirmDto: bobConfirmDto): Promise<any> {
+        const result = await this.sendRequest(recipientConfirmDto, '/api/orders/confirm');
         return result.data;
     }
 

@@ -1,13 +1,14 @@
 import { Body, Controller, Delete, Get, Param, Post, Put, Query } from '@nestjs/common';
 import { ApiResponse } from '@nestjs/swagger';
-import { DarkpoolContext } from '../common/context/darkpool.context';
+import { DarkSwapContext } from '../common/context/darkSwap.context';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
-import { ApiGenericArrayResponse, ApiGenericResponse, DarkPoolSimpleResponse } from '../common/response.interface';
+import { ApiGenericArrayResponse, ApiGenericResponse, DarkSwapSimpleResponse } from '../common/response.interface';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
 import { UpdatePriceDto } from './dto/updatePrice.dto';
 import { OrderService } from './order.service';
-import { DarkpoolError } from '@thesingularitynetwork/singularity-sdk';
+import { DarkSwapError } from '@thesingularitynetwork/darkswap-sdk';
+import { OrderType } from '../types';
 
 @Controller('orders')
 export class OrderController {
@@ -17,17 +18,26 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Order created',
-    type: DarkPoolSimpleResponse
+    type: DarkSwapSimpleResponse
   })
   async createOrder(@Body() orderDto: OrderDto): Promise<void> {
     if (orderDto.orderId) {
       const order = await this.orderService.getOrderById(orderDto.orderId);
       if (order) {
-        throw new DarkpoolError('Duplicate Order ID');
+        throw new DarkSwapError('Duplicate Order ID');
       }
     }
 
-    const context = await DarkpoolContext.createDarkpoolContext(orderDto.chainId, orderDto.wallet)
+    if (orderDto.orderType === OrderType.STOP_LOSS_LIMIT
+      || orderDto.orderType === OrderType.STOP_LOSS
+      || orderDto.orderType === OrderType.TAKE_PROFIT
+      || orderDto.orderType === OrderType.TAKE_PROFIT_LIMIT) {
+      if (!orderDto.orderTriggerPrice || isNaN(Number(orderDto.orderTriggerPrice)) || Number(orderDto.orderTriggerPrice) <= 0) {
+        throw new DarkSwapError('Order trigger price is required for stop loss or take profit orders');
+      }
+    }
+
+    const context = await DarkSwapContext.createDarkSwapContext(orderDto.chainId, orderDto.wallet)
     await this.orderService.createOrder(orderDto, context);
   }
 
@@ -35,10 +45,10 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Order canceled',
-    type: DarkPoolSimpleResponse
+    type: DarkSwapSimpleResponse
   })
   async cancelOrder(@Body() cancelOrderDto: CancelOrderDto) {
-    const context = await DarkpoolContext.createDarkpoolContext(cancelOrderDto.chainId, cancelOrderDto.wallet)
+    const context = await DarkSwapContext.createDarkSwapContext(cancelOrderDto.chainId, cancelOrderDto.wallet)
     await this.orderService.cancelOrder(cancelOrderDto.orderId, context);
   }
 
@@ -46,7 +56,7 @@ export class OrderController {
   @ApiResponse({
     status: 200,
     description: 'Order price updated',
-    type: DarkPoolSimpleResponse
+    type: DarkSwapSimpleResponse
   })
   async updateOrderPrice(@Body() updatePriceDto: UpdatePriceDto) {
     await this.orderService.updateOrderPrice(updatePriceDto);

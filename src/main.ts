@@ -3,12 +3,12 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import 'reflect-metadata';
 import { AppModule } from './app.module';
 import { AssetPairService } from './common/assetPair.service';
-import { DarkpoolExceptionFilter } from './common/exception.filter';
+import { DarkSwapExceptionFilter } from './common/exception.filter';
 import { ResponseInterceptor } from './common/response.interceptor';
 import { ConfigLoader } from './utils/configUtil';
 
 import { startWebSocket } from './wsmain';
-
+import { WalletMutexService } from './common/mutex/walletMutex.service';
 
 async function bootstrap() {
   ConfigLoader.getInstance();
@@ -16,7 +16,7 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule);
   app.setGlobalPrefix('api');
-  app.useGlobalFilters(new DarkpoolExceptionFilter());
+  app.useGlobalFilters(new DarkSwapExceptionFilter());
   app.useGlobalInterceptors(new ResponseInterceptor());
 
   // Swagger config
@@ -29,6 +29,8 @@ async function bootstrap() {
   SwaggerModule.setup('api', app, document);
 
   await assetPairService.syncAssetPairs();
+  const wallets = ConfigLoader.getInstance().getConfig().wallets.map((wallet) => wallet.address.toLowerCase());
+  WalletMutexService.getInstance().init(wallets);
 
   const port = process.env.PORT || 3002;
   await app.listen(port);
