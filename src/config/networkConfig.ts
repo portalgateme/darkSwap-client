@@ -69,9 +69,9 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
 
-    merkleTreeOperator: '0x0', //FIXME
-    darkSwapAssetManager: '0x0', //FIXME
-    darkSwapFeeAssetManager: '0x0', //FIXME
+    merkleTreeOperator: '0xa0577A04AabF1982b0A00b55D07cb2789cA6DBE1',
+    darkSwapAssetManager: '0x3d6dc90F4840c595d58739C38E88fcC23FCe374a',
+    darkSwapFeeAssetManager: '0x7744103e5a28C4c2c420DB1462de21f1dc53e11A',
     drakSwapSubgraphUrl: 'https://subgraph.satsuma-prod.com/1c6a44a9ed6e/pgs-team--611591/singularity-sepolia-subgraph/api',
     explorerUrl: {
       tx: 'https://sepolia.etherscan.io/tx/',
