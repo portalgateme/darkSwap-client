@@ -45,27 +45,27 @@ async function processMessage(message: QueuedMessage): Promise<void> {
             case EventType.OrderMatchedAsBob:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
                 console.log('Event for order matched as Bob: ', notificationEvent.orderId);
-                await walletMutexService.getMutex(orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
                     await settlementService.bobConfirm(orderInfo);
                 });
                 break;
             case EventType.OrderMatchedAsAlice:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
-                await walletMutexService.getMutex(orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
                     console.log('Event for order matched as Alice: ', notificationEvent.orderId);
                     await settlementService.matchedForAlice(orderInfo);
                 });
                 break;
             case EventType.OrderConfirmed:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
-                await walletMutexService.getMutex(orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
                     console.log('Event for order confirmed: ', notificationEvent.orderId);
                     await settlementService.aliceSwap(orderInfo);
                 });
                 break;
             case EventType.OrderSettled:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
-                await walletMutexService.getMutex(orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
                     console.log('Event for order settled: ', notificationEvent.orderId);
                     await settlementService.bobPostSettlement(orderInfo, notificationEvent.txHash || '');
                 });
@@ -75,14 +75,14 @@ async function processMessage(message: QueuedMessage): Promise<void> {
                 break;
             case EventType.orderCancelled:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
-                await walletMutexService.getMutex(orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
                     console.log('Event for order cancelled: ', notificationEvent.orderId);
                     await orderService.cancelOrderByNotificaion(orderInfo);
                 });
                 break;
             case EventType.OrderTriggered:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
-                await walletMutexService.getMutex(orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
                     console.log('Event for order triggered: ', notificationEvent.orderId);
                     await orderService.triggerOrder(orderInfo);
                 });
