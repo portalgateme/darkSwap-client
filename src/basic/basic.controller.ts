@@ -1,47 +1,47 @@
 import { Body, Controller, Post } from '@nestjs/common';
-import { DarkpoolContext } from '../common/context/darkpool.context';
+import { DarkSwapContext } from '../common/context/darkSwap.context';
 import { TokenService } from '../common/token/token.service';
 import { BasicService } from './basic.service';
 import { DepositDto } from './dto/deposit.dto';
 import { WithdrawDto } from './dto/withdraw.dto';
-import { BaseDto } from '../common/dto/base.dto';
 import { ApiResponse } from '@nestjs/swagger';
-import { DarkPoolSimpleResponse } from '../common/response.interface';
+import { DarkSwapSimpleResponse } from '../common/response.interface';
+import { WalletMutexService } from '../common/mutex/walletMutex.service';
 
 @Controller('basic')
 export class BasicController {
-  constructor(private readonly basicService: BasicService) { }
+  private walletMutexService: WalletMutexService;
+  constructor(private readonly basicService: BasicService) { 
+    this.walletMutexService = WalletMutexService.getInstance();
+  }
 
   @Post('deposit')
   @ApiResponse({
     status: 200,
     description: 'Deposit success',
-    type: DarkPoolSimpleResponse
+    type: DarkSwapSimpleResponse
   })
   async deposit(@Body() depositDto: DepositDto) {
-    const context = await DarkpoolContext.createDarkpoolContext(depositDto.chainId, depositDto.wallet)
+    const context = await DarkSwapContext.createDarkSwapContext(depositDto.chainId, depositDto.wallet)
     const token = await TokenService.getTokenByChainId(depositDto.chainId, depositDto.asset);
-    await this.basicService.deposit(context, token, BigInt(depositDto.amount));
+    const mutex = this.walletMutexService.getMutex(context.chainId, context.walletAddress.toLowerCase());
+    await mutex.runExclusive(async () => { 
+      await this.basicService.deposit(context, token, BigInt(depositDto.amount));
+    });
   }
 
   @Post('withdraw')
   @ApiResponse({
     status: 200,
     description: 'Withdraw success',
-    type: DarkPoolSimpleResponse
+    type: DarkSwapSimpleResponse
   })
   async withdraw(@Body() withdrawDto: WithdrawDto) {
-    const context = await DarkpoolContext.createDarkpoolContext(withdrawDto.chainId, withdrawDto.wallet)
+    const context = await DarkSwapContext.createDarkSwapContext(withdrawDto.chainId, withdrawDto.wallet)
     const token = await TokenService.getTokenByChainId(withdrawDto.chainId, withdrawDto.asset);
-    await this.basicService.withdraw(context, token, BigInt(withdrawDto.amount), withdrawDto.receiptAddress);
-  }
-
-  @Post('mintAccessToken')
-  @ApiResponse({
-    status: 200,
-    description: 'Mint access token success',
-    type: DarkPoolSimpleResponse
-  })
-  async mintAccessToken(@Body() baseDto: BaseDto) {
+    const mutex = this.walletMutexService.getMutex(context.chainId, context.walletAddress.toLowerCase());
+    await mutex.runExclusive(async () => {
+      await this.basicService.withdraw(context, token, BigInt(withdrawDto.amount));
+    });
   }
 }

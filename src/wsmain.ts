@@ -3,15 +3,20 @@ import { ConfigLoader } from './utils/configUtil';
 import { SettlementService } from './settlement/settlement.service';
 import { AssetPairService } from './common/assetPair.service';
 import { OrderService } from './orders/order.service';
+import { WalletMutexService } from './common/mutex/walletMutex.service';
+import { DatabaseService } from './common/db/database.service';
+import { OrderDto } from './orders/dto/order.dto';
 
 
 enum EventType {
-    OrderMatched = 1,
+    OrderMatchedAsBob = 1,
     OrderConfirmed = 2,
     OrderSettled = 3,
     AssetPairCreated = 4,
     orderCancelled = 5,
-    Unknown = 0
+    Unknown = 0,
+    OrderMatchedAsAlice = 6,
+    OrderTriggered = 7
 }
 
 interface QueuedMessage {
@@ -32,33 +37,67 @@ async function processMessage(message: QueuedMessage): Promise<void> {
         const assetPairService = AssetPairService.getInstance();
         const notificationEvent = JSON.parse(message.data);
         const orderService = OrderService.getInstance();
+        const dbService = DatabaseService.getInstance();
+        const walletMutexService = WalletMutexService.getInstance();
+        let orderInfo: OrderDto;
 
         switch (notificationEvent.eventType) {
-            case EventType.OrderMatched:
-                console.log('Event for order matched: ', notificationEvent.orderId);
-                await settlementService.takerConfirm(notificationEvent.orderId);
+            case EventType.OrderMatchedAsBob:
+                orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
+                console.log('Event for order matched as Bob: ', notificationEvent.orderId);
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                    await settlementService.bobConfirm(orderInfo);
+                });
+                break;
+            case EventType.OrderMatchedAsAlice:
+                orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                    console.log('Event for order matched as Alice: ', notificationEvent.orderId);
+                    await settlementService.matchedForAlice(orderInfo);
+                });
                 break;
             case EventType.OrderConfirmed:
-                console.log('Event for order confirmed: ', notificationEvent.orderId);
-                await settlementService.makerSwap(notificationEvent.orderId);
+                orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                    console.log('Event for order confirmed: ', notificationEvent.orderId);
+                    await settlementService.aliceSwap(orderInfo);
+                });
                 break;
             case EventType.OrderSettled:
-                console.log('Event for order settled: ', notificationEvent.orderId);
-                await settlementService.takerPostSettlement(notificationEvent.orderId, notificationEvent.txHash || '');
+                orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                    console.log('Event for order settled: ', notificationEvent.orderId);
+                    await settlementService.bobPostSettlement(orderInfo, notificationEvent.txHash || '');
+                });
                 break;
             case EventType.AssetPairCreated:
                 await assetPairService.syncAssetPair(notificationEvent.assetPairId, notificationEvent.chainId);
                 break;
             case EventType.orderCancelled:
-                await orderService.cancelOrderByNotificaion(notificationEvent.orderId);
+                orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                    console.log('Event for order cancelled: ', notificationEvent.orderId);
+                    await orderService.cancelOrderByNotificaion(orderInfo);
+                });
+                break;
+            case EventType.OrderTriggered:
+                orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
+                await walletMutexService.getMutex(orderInfo.chainId, orderInfo.wallet.toLowerCase()).runExclusive(async () => {
+                    console.log('Event for order triggered: ', notificationEvent.orderId);
+                    await orderService.triggerOrder(orderInfo);
+                });
                 break;
             default:
                 console.log('Unknown event:', notificationEvent);
                 break;
         }
-    } catch (error) {
-        console.log(error.stack, error.message);
+    } catch (error: any) {
         console.error('Invalid message:', message.data);
+        if (error instanceof Error) {
+            console.error('Caught error:', error.stack || error.message || error);
+        } else {
+            console.error('Caught non-standard error:', JSON.stringify(error, null, 2));
+        }
     }
 }
 
@@ -68,7 +107,7 @@ async function processMessageQueue(): Promise<void> {
     }
 
     processingState = ProcessingState.Processing;
-    
+
     try {
         while (messageQueue.length > 0) {
             const message = messageQueue.shift();
@@ -100,7 +139,7 @@ export function startWebSocket() {
     let ws: WebSocket;
     let isReconnecting = false;
     let reconnectTimeout: NodeJS.Timeout;
-    
+
     let heartbeatInterval: NodeJS.Timeout;
     let lastHeartbeatTime: number = Date.now();
     const HEARTBEAT_INTERVAL = 30000;
@@ -134,7 +173,7 @@ export function startWebSocket() {
 
     const connect = () => {
         cleanup();
-        
+
         ws = new WebSocket(booknodeUrl);
 
         ws.on('open', () => {

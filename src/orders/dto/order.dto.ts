@@ -39,6 +39,11 @@ export class OrderDto extends BaseDto {
     })
     @IsOrderStpModeValid()
     stpMode: StpMode;
+
+    @ApiProperty({description: 'Price for stop loss or take profit orders'})
+    @IsOptional()
+    orderTriggerPrice?: string;
+
     @ApiProperty({description: 'Human readable price'})
     @IsNotEmpty()
     price: string;
@@ -51,6 +56,9 @@ export class OrderDto extends BaseDto {
     @ApiProperty({description: 'Amount with decimals'})
     @IsOptional()
     partialAmountIn?: string;
+    
+    feeRatio: string;
+    
     @ApiProperty()
     @IsOptional()
     status?: OrderStatus;

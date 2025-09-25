@@ -1,9 +1,11 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { DepositService, Token, WithdrawService, isAddressCompliant } from '@thesingularitynetwork/singularity-sdk';
-import { DarkpoolContext } from '../common/context/darkpool.context';
+import { DepositService, Token, WithdrawService, DarkSwapNote } from '@thesingularitynetwork/darkswap-sdk';
+import { DarkSwapContext } from '../common/context/darkSwap.context';
 import { DatabaseService } from '../common/db/database.service';
-import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
+import { NotesJoinService } from '../common/notesJoin.service';
+import { NoteService } from '../common/note.service';
 import { getConfirmations } from '../config/networkConfig';
+import { DarkSwapException } from '../exception/darkSwap.exception';
 
 @Injectable()
 export class BasicService {
@@ -12,58 +14,71 @@ export class BasicService {
 
   private static instance: BasicService;
   private dbService: DatabaseService;
-  private noteBatchJoinSplitService: NoteBatchJoinSplitService;
-
+  private noteService: NoteService;
+  private notesJoinService: NotesJoinService;
   public constructor() {
     this.dbService = DatabaseService.getInstance();
-    this.noteBatchJoinSplitService = NoteBatchJoinSplitService.getInstance();
+    this.noteService = NoteService.getInstance();
+    this.notesJoinService = NotesJoinService.getInstance();
   }
 
   // Method to deposit funds
-  async deposit(darkPoolContext: DarkpoolContext, asset: Token, amount: bigint) {
-    const depositService = new DepositService(darkPoolContext.darkPool);
-    const { context, outNotes } = await depositService.prepare(
-      asset.address, BigInt(amount), darkPoolContext.walletAddress, darkPoolContext.signature);
+  async deposit(darkSwapContext: DarkSwapContext, asset: Token, amount: bigint) {
+    const depositService = new DepositService(darkSwapContext.darkSwap);
 
-    await this.dbService.addNote(
-      darkPoolContext.chainId,
-      darkPoolContext.publicKey,
-      darkPoolContext.walletAddress,
-      0,
-      outNotes[0].note,
-      outNotes[0].rho,
-      outNotes[0].asset,
-      outNotes[0].amount,
-      '')
-    await depositService.generateProof(context);
+    const currentBalanceNote = await this.notesJoinService.getCurrentBalanceNote(darkSwapContext, asset.address);
+
+    const { context, newBalanceNote } = await depositService.prepare(
+      currentBalanceNote, asset.address, BigInt(amount), darkSwapContext.walletAddress, darkSwapContext.signature);
+
+    this.noteService.addNote(newBalanceNote, darkSwapContext, false);
+
     const tx = await depositService.execute(context);
-    const receipt = await darkPoolContext.darkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
+
+    const receipt = await darkSwapContext.darkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
     if (receipt.status !== 1) {
       throw new Error("Deposit failed");
     }
 
-    this.dbService.updateNoteTransactionByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, outNotes[0].note, tx);
-    this.logger.log(`Deposit of ${amount} ${asset.symbol} for wallet ${darkPoolContext.walletAddress} completed with tx ${tx}`);
+    if (currentBalanceNote.note != 0n) {
+      this.noteService.setNoteUsed(currentBalanceNote, darkSwapContext);
+    }
+    await this.dbService.updateNoteTransactionByWalletAndNoteCommitment(darkSwapContext.walletAddress, darkSwapContext.chainId, newBalanceNote.note, tx);
+    this.logger.log(`Deposit of ${amount} ${asset.symbol} for wallet ${darkSwapContext.walletAddress} completed with tx ${tx}`);
   }
 
   // Method to withdraw funds
-  async withdraw(darkPoolContext: DarkpoolContext, asset: Token, amount: bigint, receiptAddress: string) {
+  async withdraw(darkSwapContext: DarkSwapContext, asset: Token, amount: bigint) {
+    const withdrawService = new WithdrawService(darkSwapContext.darkSwap);
 
-    if (!isAddressCompliant(receiptAddress, darkPoolContext.darkPool)) {
-      throw new Error("Receipt address is not compliant")
+    const currentBalanceNote = await this.notesJoinService.getCurrentBalanceNote(darkSwapContext, asset.address);
+
+    if (currentBalanceNote.amount < amount) {
+      throw new DarkSwapException("Insufficient funds");
     }
 
-    const withdrawService = new WithdrawService(darkPoolContext.darkPool);
+    const { context: withdrawContext, newBalanceNote } = await withdrawService.prepare(
+      darkSwapContext.walletAddress,
+      currentBalanceNote,
+      amount,
+      darkSwapContext.signature);
 
-    const noteToWithdraw = await this.noteBatchJoinSplitService.getNoteOfAssetAmount(darkPoolContext, asset.address, amount);
-    if (noteToWithdraw === null) {
-      throw new Error("Insufficient funds");
+    if (newBalanceNote.amount > 0n) {
+      this.noteService.addNote(newBalanceNote, darkSwapContext, false);
     }
 
-    const { context: withdrawContext } = await withdrawService.prepare(noteToWithdraw, receiptAddress, darkPoolContext.signature);
-    await withdrawService.generateProof(withdrawContext);
-    await withdrawService.executeAndWaitForResult(withdrawContext);
-    this.dbService.updateNoteSpentByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, noteToWithdraw.note);
-    this.logger.log(`Withdraw of ${amount} ${asset.symbol} for wallet ${darkPoolContext.walletAddress} completed with tx ${withdrawContext.tx}`);
+    const tx = await withdrawService.execute(withdrawContext);
+
+    const receipt = await darkSwapContext.darkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
+    if (receipt.status !== 1) {
+      throw new Error("Withdraw failed");
+    }
+
+    this.noteService.setNoteUsed(currentBalanceNote, darkSwapContext);
+
+    if (newBalanceNote.amount > 0n) {
+      this.noteService.setNoteActive(newBalanceNote, darkSwapContext, tx);
+    }
+    this.logger.log(`Withdraw of ${amount} ${asset.symbol} for wallet ${darkSwapContext.walletAddress} completed with tx ${withdrawContext.tx}`);
   }
 }

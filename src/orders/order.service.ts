@@ -1,20 +1,19 @@
 import { Injectable, Logger } from '@nestjs/common';
-import { Note } from '@thesingularitynetwork/darkpool-v1-proof';
-import { CancelOrderService, CreateMakerOrderService } from '@thesingularitynetwork/singularity-sdk';
+import { DarkSwapOrderNote, DarkSwapNote, ProCancelOrderService, ProCreateOrderService } from '@thesingularitynetwork/darkswap-sdk';
 import { v4 } from 'uuid';
 import { BooknodeService } from '../common/booknode.service';
-import { DarkpoolContext } from '../common/context/darkpool.context';
+import { DarkSwapContext } from '../common/context/darkSwap.context';
 import { DatabaseService } from '../common/db/database.service';
 import { AssetPairDto } from '../common/dto/assetPair.dto';
-import { NoteBatchJoinSplitService } from '../common/noteBatchJoinSplit.service';
 import { getConfirmations } from '../config/networkConfig';
-import { DarkpoolException } from '../exception/darkpool.exception';
-import { NoteStatus, OrderDirection, OrderStatus } from '../types';
+import { DarkSwapException } from '../exception/darkSwap.exception';
+import { OrderDirection, OrderStatus, OrderType } from '../types';
 import { CancelOrderDto } from './dto/cancelOrder.dto';
 import { OrderDto } from './dto/order.dto';
 import { UpdatePriceDto } from './dto/updatePrice.dto';
 import { OrderEventService } from './orderEvent.service';
-
+import { NotesJoinService } from '../common/notesJoin.service';
+import { NoteService } from '../common/note.service';
 
 @Injectable()
 export class OrderService {
@@ -23,13 +22,15 @@ export class OrderService {
 
   private static instance: OrderService;
   private dbService: DatabaseService;
-  private noteBatchJoinSplitService: NoteBatchJoinSplitService;
+  private noteService: NoteService;
+  private notesJoinService: NotesJoinService;
   private bookNodeService: BooknodeService;
   private orderEventService: OrderEventService;
-  
+
   public constructor() {
     this.dbService = DatabaseService.getInstance();
-    this.noteBatchJoinSplitService = NoteBatchJoinSplitService.getInstance();
+    this.noteService = NoteService.getInstance();
+    this.notesJoinService = NotesJoinService.getInstance();
     this.bookNodeService = BooknodeService.getInstance();
     this.orderEventService = OrderEventService.getInstance();
   }
@@ -41,33 +42,77 @@ export class OrderService {
     return OrderService.instance;
   }
 
-  async createOrder(orderDto: OrderDto, darkPoolContext: DarkpoolContext) {
-    const createMakerOrderService = new CreateMakerOrderService(darkPoolContext.relayerDarkPool);
+  async triggerOrder(orderInfo: OrderDto) {
+    if (!orderInfo) {
+      throw new DarkSwapException('Order not found');
+    }
 
+    this.dbService.updateOrderTriggered(orderInfo.orderId);
+
+    await OrderEventService.getInstance().logOrderStatusChange(
+      orderInfo.orderId,
+      orderInfo.wallet,
+      orderInfo.chainId,
+      OrderStatus.TRIGGERED
+    );
+  }
+
+  async createOrder(orderDto: OrderDto, darkSwapContext: DarkSwapContext) {
     const assetPair = await this.dbService.getAssetPairById(orderDto.assetPairId, orderDto.chainId);
     const outAsset = orderDto.orderDirection === OrderDirection.BUY ? assetPair.quoteAddress : assetPair.baseAddress;
+    const inAsset = orderDto.orderDirection === OrderDirection.BUY ? assetPair.baseAddress : assetPair.quoteAddress;
 
-    const noteForOrder = await this.noteBatchJoinSplitService.getNoteOfAssetAmount(darkPoolContext, outAsset, BigInt(orderDto.amountOut));
-    if (!noteForOrder) {
-      throw new DarkpoolException(`Asset ${outAsset} not enough`);
+    const currentBalance = await this.notesJoinService.getCurrentBalanceNote(darkSwapContext, outAsset);
+
+    if (currentBalance.amount < BigInt(orderDto.amountOut)) {
+      throw new DarkSwapException(`Insufficient Asset ${outAsset}`);
     }
-    const { context } = await createMakerOrderService.prepare(noteForOrder, darkPoolContext.signature);
-    await createMakerOrderService.generateProof(context);
-    const tx = await createMakerOrderService.execute(context);
-    const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
+
+    const proCreateOrderService = new ProCreateOrderService(darkSwapContext.darkSwap);
+    const { context, orderNote, newBalance } = await proCreateOrderService.prepare(
+      darkSwapContext.walletAddress,
+      outAsset,
+      BigInt(orderDto.amountOut),
+      inAsset,
+      BigInt(orderDto.amountIn),
+      currentBalance,
+      darkSwapContext.signature
+    );
+    this.noteService.addNote(orderNote, darkSwapContext, true);
+    if (newBalance.amount > 0n) {
+      this.noteService.addNote(newBalance, darkSwapContext, false);
+    }
+
+    const tx = await proCreateOrderService.execute(context);
+    const receipt = await darkSwapContext.darkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
     if (receipt.status !== 1) {
-      throw new DarkpoolException("Order creation failed");
+      throw new DarkSwapException("Order creation failed");
+    }
+    this.noteService.setNoteUsed(currentBalance, darkSwapContext);
+    this.noteService.setNoteActive(orderNote, darkSwapContext, tx);
+
+    if (newBalance.amount > 0n) {
+      this.noteService.setNoteActive(newBalance, darkSwapContext, tx);
     }
 
-    this.dbService.updateNoteLockedByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, noteForOrder.note);
     if (!orderDto.orderId) {
       orderDto.orderId = v4();
     }
-    orderDto.status = OrderStatus.OPEN;
-    orderDto.noteCommitment = noteForOrder.note.toString();
-    orderDto.nullifier = context.proof.outNullifier;
+
+    if (orderDto.orderType === OrderType.STOP_LOSS_LIMIT
+      || orderDto.orderType === OrderType.STOP_LOSS
+      || orderDto.orderType === OrderType.TAKE_PROFIT
+      || orderDto.orderType === OrderType.TAKE_PROFIT_LIMIT) {
+      orderDto.status = OrderStatus.NOT_TRIGGERED;
+    } else {
+      orderDto.status = OrderStatus.OPEN;
+    }
+
+    orderDto.noteCommitment = orderNote.note.toString();
+    orderDto.nullifier = orderNote.nullifier.toString();
+    orderDto.feeRatio = orderNote.feeRatio.toString();
     orderDto.txHashCreated = tx;
-    orderDto.publicKey = darkPoolContext.publicKey;
+    orderDto.publicKey = darkSwapContext.publicKey;
 
     await this.dbService.addOrderByDto(orderDto);
 
@@ -77,8 +122,8 @@ export class OrderService {
 
     await OrderEventService.getInstance().logOrderStatusChange(
       orderDto.orderId,
-      darkPoolContext.walletAddress,
-      darkPoolContext.chainId,
+      darkSwapContext.walletAddress,
+      darkSwapContext.chainId,
       OrderStatus.OPEN
     );
 
@@ -88,9 +133,9 @@ export class OrderService {
   async updateOrderPrice(updatePriceDto: UpdatePriceDto) {
     const order = await this.dbService.getOrderByOrderId(updatePriceDto.orderId);
     if (!order) {
-      throw new DarkpoolException('Order not found');
+      throw new DarkSwapException('Order not found');
     } else if (order.status != OrderStatus.OPEN) {
-      throw new DarkpoolException('Order is not in open status');
+      throw new DarkSwapException('Order is not in open status');
     }
     await this.bookNodeService.updateOrderPrice(updatePriceDto);
     await this.dbService.updateOrderPrice(updatePriceDto.orderId, updatePriceDto.price, BigInt(updatePriceDto.amountIn), BigInt(updatePriceDto.partialAmountIn));
@@ -98,70 +143,72 @@ export class OrderService {
   }
 
   // Method to cancel an order
-  async cancelOrder(orderId: string, darkPoolContext: DarkpoolContext, byNotification: boolean = false) {
-
-    const cancelOrderService = new CancelOrderService(darkPoolContext.relayerDarkPool);
+  async cancelOrder(orderId: string, darkSwapContext: DarkSwapContext, byNotification: boolean = false) {
 
     const order = await this.dbService.getOrderByOrderId(orderId);
     if (!order) {
-      throw new DarkpoolException('Order not found');
+      throw new DarkSwapException('Order not found');
     }
 
     if (order.status !== OrderStatus.OPEN) {
-      throw new DarkpoolException('Order is not cancellable');
+      throw new DarkSwapException('Order is not cancellable');
     }
 
     const note = await this.dbService.getNoteByCommitment(order.noteCommitment);
     if (!note) {
-      throw new DarkpoolException('Note not found');
+      throw new DarkSwapException('Note not found');
     }
 
     const noteToProcess = {
-      note: note.noteCommitment,
+      note: note.note,
       rho: note.rho,
       asset: note.asset,
-      amount: note.amount
-    } as Note;
+      amount: note.amount,
+      feeRatio: BigInt(order.feeRatio),
+    } as DarkSwapOrderNote;
 
+    const currentBalanceNote = await this.notesJoinService.getCurrentBalanceNote(darkSwapContext, note.asset);
+    const proCancelOrderService = new ProCancelOrderService(darkSwapContext.darkSwap);
 
-    if (note.status === NoteStatus.LOCKED) {
+    const { context, newBalance } = await proCancelOrderService.prepare(
+      darkSwapContext.walletAddress,
+      noteToProcess,
+      currentBalanceNote,
+      darkSwapContext.signature
+    );
 
-
-      const { context } = await cancelOrderService.prepare(noteToProcess, darkPoolContext.signature);
-      await cancelOrderService.generateProof(context);
-      const tx = await cancelOrderService.execute(context);
-      const receipt = await darkPoolContext.relayerDarkPool.provider.waitForTransaction(tx, getConfirmations(darkPoolContext.chainId));
-      if (receipt.status !== 1) {
-        throw new DarkpoolException("Order cancellation failed");
-      }
-
-      await this.dbService.updateNoteActiveByWalletAndNoteCommitment(darkPoolContext.walletAddress, darkPoolContext.chainId, note.noteCommitment);
+    const tx = await proCancelOrderService.execute(context);
+    const receipt = await darkSwapContext.darkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
+    if (receipt.status !== 1) {
+      throw new DarkSwapException("Order cancellation failed");
     }
+
+    this.noteService.setNoteUsed(noteToProcess as DarkSwapNote, darkSwapContext);
+    this.noteService.addNote(newBalance, darkSwapContext, false, tx);
 
     const cancelOrderDto = {
       orderId: orderId,
-      chainId: darkPoolContext.chainId,
-      wallet: darkPoolContext.walletAddress
+      chainId: darkSwapContext.chainId,
+      wallet: darkSwapContext.walletAddress
     } as CancelOrderDto;
 
     await this.dbService.cancelOrder(cancelOrderDto.orderId);
     if (!byNotification) {
       await this.bookNodeService.cancelOrder(cancelOrderDto);
     }
-    
+
     await this.orderEventService.logOrderStatusChange(
       orderId,
-      darkPoolContext.walletAddress,
-      darkPoolContext.chainId,
+      darkSwapContext.walletAddress,
+      darkSwapContext.chainId,
       OrderStatus.CANCELLED
     );
   }
 
-  async cancelOrderByNotificaion(orderId: string) {
+  async cancelOrderByNotificaion(orderInfo: OrderDto) {
 
-    const order = await this.dbService.getOrderByOrderId(orderId);
-    const darkPoolContext = await DarkpoolContext.createDarkpoolContext(order.chainId, order.wallet);
-    await this.cancelOrder(orderId, darkPoolContext, true);
+    const darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
+    await this.cancelOrder(orderInfo.orderId, darkSwapContext, true);
   }
 
   async getOrdersByStatusAndPage(status: number, page: number, limit: number): Promise<OrderDto[]> {
