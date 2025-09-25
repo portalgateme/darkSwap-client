@@ -10,9 +10,10 @@ import Database from 'better-sqlite3';
             provide: DarkSwapClientCore,
             useFactory: () => {
                 const config = ConfigLoader.getInstance().getConfig();
+                const darkSwapConfig = configToDarkSwapConfig(config);
                 const dbFilePath = ConfigLoader.getInstance().getConfig().dbFilePath;
                 const db = new Database(dbFilePath);
-                return new DarkSwapClientCore(configToDarkSwapConfig(config), db);
+                return new DarkSwapClientCore(darkSwapConfig, db);
             }
         }
     ],

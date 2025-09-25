@@ -3,7 +3,7 @@ import { OrdersModule } from './orders/orders.module';
 import { BasicModule } from './basic/basic.module';
 import { AccountModule } from './account/account.module';
 import { CommonModule } from './common/common.module';
-import { BootstrapService } from './bootstrapService.service';
+import { BootstrapService } from './bootstrap.service';
 
 @Module({
   imports: [

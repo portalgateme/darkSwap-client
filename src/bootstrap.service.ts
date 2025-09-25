@@ -39,6 +39,7 @@ export class BootstrapService implements OnApplicationBootstrap, OnApplicationSh
 
             this.isStarted = true;
         } catch (error) {
+            console.error('Failed to start darkSwapClient', error);
             this.startupPromise = null;
             throw error;
         }
