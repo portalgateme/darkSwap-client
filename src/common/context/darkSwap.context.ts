@@ -9,21 +9,26 @@ export class DarkSwapContext {
     walletAddress: string
     publicKey: string
     darkSwap: DarkSwap
+    relayerDarkSwap: DarkSwap
     signature: string
 
-    private constructor(chain: number, wallet: string, signer: Signer, pubKey: string, darkSwap: DarkSwap,  signature: string) {
+    private constructor(chain: number, wallet: string, signer: Signer, pubKey: string, darkSwap: DarkSwap, relayerDarkSwap: DarkSwap, signature: string) {
         this.chainId = chain
         this.walletAddress = wallet
         this.signer = signer
         this.publicKey = pubKey
         this.darkSwap = darkSwap
+        this.relayerDarkSwap = relayerDarkSwap
         this.signature = signature
     }
 
     static async createDarkSwapContext(chain: number, walletIn: string) {
         const wallet = getAddress(walletIn.toLowerCase());
         const [signer, pubKey] = RpcManager.getInstance().getSignerAndPublicKey(wallet, chain)
+        const relayerSigner = RpcManager.getInstance().getSignerForUserSwapRelayer(chain)
+
         const darkSwap = getDarkSwap(chain, signer)
+        const relayerDarkSwap = relayerSigner ? getDarkSwap(chain, relayerSigner) : darkSwap
 
         const domain = {
             name: "SingularityDarkSwapClientServer",
@@ -43,6 +48,6 @@ export class DarkSwapContext {
         };
 
         const signature = await signer.signTypedData(domain, types, value);
-        return new DarkSwapContext(chain, wallet, signer, pubKey, darkSwap, signature)
+        return new DarkSwapContext(chain, wallet, signer, pubKey, darkSwap, relayerDarkSwap, signature)
     }
 } 

@@ -7,12 +7,6 @@ wallets:
     address: "0x1234567890123456789012345678901234567890"
     type: "fireblocks"
 
-singularityRelayers:
-  - relayerName: "Sepolia Relayer"
-    relayerAddress: "0x0A20B38894799fD27837aF3Ed8929E7b8d1dDDe7"
-    hostUrl: "https://app.dev.portalgate.me:20000"
-    chainId: 11155111
-
 chainRpcs:
   - chainId: 11155111
     rpcUrl: "YOUR-SEPOLIA-RPC-URL"
