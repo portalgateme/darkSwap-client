@@ -97,7 +97,7 @@ export class SettlementService {
     const assetPair = await this.dbService.getAssetPairById(orderInfo.assetPairId, orderInfo.chainId);
     const bobAsset = orderInfo.orderDirection === OrderDirection.BUY ? assetPair.quoteAddress : assetPair.baseAddress;
 
-    const proSwapService = new ProSwapService(darkSwapContext.darkSwap);
+    const proSwapService = new ProSwapService(darkSwapContext.relayerDarkSwap);
     const { context, swapInNote, changeNote } = await proSwapService.prepare(
       darkSwapContext.walletAddress,
       { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) },
@@ -114,7 +114,7 @@ export class SettlementService {
 
     const tx = await proSwapService.execute(context);
 
-    const receipt = await darkSwapContext.darkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
+    const receipt = await darkSwapContext.relayerDarkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
     if (receipt.status !== 1) {
       throw new DarkSwapException("pro swap failed with tx hash " + tx);
     }
