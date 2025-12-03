@@ -7,13 +7,6 @@ const WalletSchema = z.object({
   type: z.enum(['privateKey', 'fireblocks']).default('privateKey')
 });
 
-const RelayerSchema = z.object({
-  relayerName: z.string(),
-  relayerAddress: z.string().regex(/^0x[a-fA-F0-9]{40}$/),
-  hostUrl: z.string().url(),
-  chainId: z.number()
-});
-
 const ChainRpcSchema = z.object({
   chainId: z.number(),
   rpcUrl: z.string().url()
@@ -39,7 +32,6 @@ const FireblocksConfigSchema = z.object({
 
 export const ConfigSchema = z.object({
   wallets: z.array(WalletSchema),
-  singularityRelayers: z.array(RelayerSchema),
   chainRpcs: z.array(ChainRpcSchema),
   dbFilePath: dbFilePathScema,
   bookNodeSocketUrl: bookNodeSocketUrlScema,
@@ -80,7 +72,6 @@ export function validateConfig(config: unknown) {
 }
 
 export type WalletConfig = z.infer<typeof WalletSchema>;
-export type RelayerConfig = z.infer<typeof RelayerSchema>;
 export type ChainRpcConfig = z.infer<typeof ChainRpcSchema>;
 export type DbFilePathConfig = z.infer<typeof dbFilePathScema>;
 export type BookNodeSocketUrlConfig = z.infer<typeof bookNodeSocketUrlScema>;
