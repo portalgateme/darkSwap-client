@@ -19,7 +19,6 @@ export function getDarkSwap(chainId: number, signer: Signer) {
     const darkSwap = new DarkSwap(
         signer,
         chainId,
-        //contractConfig[chainId]
         {
             priceOracle: networkConfig[chainId].priceOracle,
             ethAddress: networkConfig[chainId].ethAddress,
@@ -27,7 +26,6 @@ export function getDarkSwap(chainId: number, signer: Signer) {
             merkleTreeOperator: networkConfig[chainId].merkleTreeOperator,
             darkSwapAssetManager: networkConfig[chainId].darkSwapAssetManager,
             darkSwapFeeAssetManager: networkConfig[chainId].darkSwapFeeAssetManager,
-            drakSwapSubgraphUrl: networkConfig[chainId].drakSwapSubgraphUrl,
         }
     )
 

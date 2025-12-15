@@ -25,7 +25,7 @@ export class SubgraphService {
             }
         `;
 
-        const response = await fetch(networkConfig[chainId].drakSwapSubgraphUrl, {
+        const response = await fetch(networkConfig[chainId].darkSwapSubgraphUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',

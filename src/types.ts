@@ -21,13 +21,7 @@ export type NetworkConfig = {
     merkleTreeOperator: HexData
     darkSwapAssetManager: HexData
     darkSwapFeeAssetManager: HexData
-    drakSwapSubgraphUrl: string
-
-    explorerUrl: {
-        tx: string
-        address: string
-        block: string
-    }
+    darkSwapSubgraphUrl: string
 }
 
 export type RelayerInfo = {
