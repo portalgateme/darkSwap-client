@@ -150,6 +150,11 @@ export class SettlementService {
     }
     console.log('Post settlement for ', orderInfo.orderId);
     await this.orderEventService.logOrderStatusChange(orderInfo.orderId, orderInfo.wallet, orderInfo.chainId, OrderStatus.SETTLED);
+    await this.booknodeService.bobPostSettlement({
+      orderId: orderInfo.orderId,
+      wallet: orderInfo.wallet,
+      chainId: orderInfo.chainId,
+    });
   }
 
   async matchedForAlice(orderInfo: OrderDto) {
