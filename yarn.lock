@@ -1466,15 +1466,16 @@
   resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-1.0.1.tgz#d21401f1d59ade56a62e139462a97f104ed19a36"
   integrity sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==
 
-"@thesingularitynetwork/darkswap-sdk@^0.1.38":
-  version "0.1.38"
-  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.1.38.tgz#1c7b3aba4dd6dffdc385575c01d1a0473342eef2"
-  integrity sha512-sQTpCF44Swo3XQEYg+pWXH6ZRV24lqSQ6z2gLWqJWAYS9p2IH99d1nCJlPjoaG460ZLQn76X1USQmtJKhUjJSg==
+"@thesingularitynetwork/darkswap-sdk@^0.2.7-beta3":
+  version "0.2.7-beta3"
+  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.2.7-beta3.tgz#2052504c424727234429d86884aab7133709274e"
+  integrity sha512-sed+9rAhzzuQ4yTsu2zS9bc5KVOtnF39L+/b/w0vIGmRFEDxp8XuHB64+Mo7U/QltMi1H4tVpVkNxhOMVYjrIg==
   dependencies:
     "@aztec/bb.js" "0.84.0"
     "@noir-lang/noir_js" "1.0.0-beta.6"
     "@noir-lang/noir_wasm" "1.0.0-beta.6"
     "@noir-lang/types" "1.0.0-beta.6"
+    axios "^1.13.1"
     tiny-invariant "^1.1.0"
     tiny-warning "^1.0.3"
 
@@ -2204,6 +2205,15 @@ axios-token-interceptor@^0.2.0:
   integrity sha512-la74OEsXBH1IS9yI6p2oTIynPtBzs0PVUSOwOBgFg2kBwTeDqQ+YJ6jaOWxsTYyqJO510OzHTfnzAn3GFuf9xA==
   dependencies:
     lock "^1.1.0"
+
+axios@^1.13.1:
+  version "1.13.2"
+  resolved "https://registry.yarnpkg.com/axios/-/axios-1.13.2.tgz#9ada120b7b5ab24509553ec3e40123521117f687"
+  integrity sha512-VPk9ebNqPcy5lRGuSlKx752IlDatOjT9paPlm8A7yOuW2Fbvp4X3JznJtT4f0GzGLLiWE9W8onz51SqLYwzGaA==
+  dependencies:
+    follow-redirects "^1.15.6"
+    form-data "^4.0.4"
+    proxy-from-env "^1.1.0"
 
 axios@^1.6.0, axios@^1.7.7, axios@^1.7.8:
   version "1.9.0"
@@ -3545,6 +3555,17 @@ form-data@^4.0.0:
   version "4.0.3"
   resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.3.tgz#608b1b3f3e28be0fccf5901fc85fb3641e5cf0ae"
   integrity sha512-qsITQPfmvMOSAdeyZ+12I1c+CKSstAFAwu+97zrnWAbIr5u8wfsExUzCesVLC8NgHuRUqNN4Zy6UPWUTRGslcA==
+  dependencies:
+    asynckit "^0.4.0"
+    combined-stream "^1.0.8"
+    es-set-tostringtag "^2.1.0"
+    hasown "^2.0.2"
+    mime-types "^2.1.12"
+
+form-data@^4.0.4:
+  version "4.0.5"
+  resolved "https://registry.yarnpkg.com/form-data/-/form-data-4.0.5.tgz#b49e48858045ff4cbf6b03e1805cebcad3679053"
+  integrity sha512-8RipRLol37bNs2bhoV67fiTEvdTrbMUYcFTiy3+wuuOnUog2QBHCZWXDRijWQfAkhBj2Uf5UnVaiWwA5vdd82w==
   dependencies:
     asynckit "^0.4.0"
     combined-stream "^1.0.8"

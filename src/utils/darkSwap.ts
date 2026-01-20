@@ -19,6 +19,7 @@ export function getDarkSwap(chainId: number, signer: Signer) {
     const darkSwap = new DarkSwap(
         signer,
         chainId,
+        signer.provider,
         {
             priceOracle: networkConfig[chainId].priceOracle,
             ethAddress: networkConfig[chainId].ethAddress,
@@ -26,6 +27,10 @@ export function getDarkSwap(chainId: number, signer: Signer) {
             merkleTreeOperator: networkConfig[chainId].merkleTreeOperator,
             darkSwapAssetManager: networkConfig[chainId].darkSwapAssetManager,
             darkSwapFeeAssetManager: networkConfig[chainId].darkSwapFeeAssetManager,
+            synaraDarkSwapOnBridgeAssetManager: '0x0',
+            synaraBridge: '0x0',
+            synaraCanonicalTokenRegistry: '0x0',
+            zkverifyRelayerUrls: []
         }
     )
 
