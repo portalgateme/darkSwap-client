@@ -4,11 +4,13 @@ import { hardhatTokens } from "./tokens/hardhat";
 import { hardhatArbTokens } from "./tokens/hardhatArb";
 import { sepoliaTokens } from "./tokens/sepolia";
 import { horizenTestNetTokens } from "./tokens/horizenTestNet";
+import { baseSepoliaTokens } from "./tokens/baseSepolia";
 
 export const tokenConfig: { [key: string]: Token[] } = {
     [ChainId.HARDHAT]: hardhatTokens,
     [ChainId.HARDHAT_ARBITRUM]: hardhatArbTokens,
     [ChainId.SEPOLIA]: sepoliaTokens,
+    [ChainId.BASE_SEPOLIA]: baseSepoliaTokens,
     [ChainId.HORIZEN_TESTNET]: horizenTestNetTokens,
     [ChainId.MAINNET]: [
         {

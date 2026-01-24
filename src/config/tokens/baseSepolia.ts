@@ -1,5 +1,5 @@
 
-export const horizenTestNetTokens = [
+export const baseSepoliaTokens = [
     {
         name: 'ETH',
         symbol: 'ETH',
@@ -10,6 +10,6 @@ export const horizenTestNetTokens = [
         name: 'MockUSDC',
         symbol: 'MockUSDC',
         decimals: 6,
-        address: '0x83A631f6D6Cd27C564b479F128B245C3650C47aA'
+        address: '0x284D735067A31D56c9312c1E3C6a0515cbC06ec0'
     },
 ]

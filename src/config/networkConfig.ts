@@ -7,6 +7,8 @@ const confirmationsConfig: { [chainId: number]: number } = {
   [ChainId.ARBITRUM_ONE]: 12,
   [ChainId.BASE]: 6,
   [ChainId.SEPOLIA]: 3,
+  [ChainId.BASE_SEPOLIA]: 3,
+  [ChainId.HORIZEN_TESTNET]: 3,
   [ChainId.HARDHAT]: 3,
   [ChainId.HARDHAT_ARBITRUM]: 3,
 }
@@ -52,10 +54,10 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
 
-    merkleTreeOperator: '0xd184b7561CB36Ae269Bf27742343266798106213',
-    darkSwapAssetManager: '0xFB6C93eF0B515d041b0DcDF427657E41DDDB8Da8',
-    darkSwapFeeAssetManager: '0xF4f1D4F28Be82D81135c13D255452B8325B585B0',
-    darkSwapSubgraphUrl: 'https://bb.subgraph.thesingularity.network/subgraphs/name/singularity/'
+    merkleTreeOperator: '0xF99969B1Cb7255e8F14741eAFEEdC767e743899a',
+    darkSwapAssetManager: '0x25b6A08F81926a918ea0Bb0a0e8Acb4971fAc379',
+    darkSwapFeeAssetManager: '0x82751BEe64a937085D842573358Cb8b375A57377',
+    darkSwapSubgraphUrl: 'https://stage.portalgate.me:38000/subgraphs/name/darkswapHorizenTestnet'
   },
   [ChainId.HARDHAT]: {
     priceOracle: '0x0AdDd25a91563696D8567Df78D5A01C9a991F9B8',
