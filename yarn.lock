@@ -1264,6 +1264,11 @@
   resolved "https://registry.yarnpkg.com/@noble/ciphers/-/ciphers-0.4.1.tgz#977fc35f563a4ca315ebbc4cbb1f9b670bd54456"
   integrity sha512-QCOA9cgf3Rc33owG0AYBB9wszz+Ul2kramWN8tXG44Gyciud/tbkEqvxRF/IpqQaBpRBNi9f4jdNxqB2CQCIXg==
 
+"@noble/ciphers@^2.1.1":
+  version "2.1.1"
+  resolved "https://registry.yarnpkg.com/@noble/ciphers/-/ciphers-2.1.1.tgz#c8c74fcda8c3d1f88797d0ecda24f9fc8b92b052"
+  integrity sha512-bysYuiVfhxNJuldNXlFEitTVdNnYUc+XNJZd7Qm2a5j1vZHgY+fazadNFWFaMK/2vye0JVlxV3gHmC0WDfAOQw==
+
 "@noble/curves@1.2.0":
   version "1.2.0"
   resolved "https://registry.npmjs.org/@noble/curves/-/curves-1.2.0.tgz"
@@ -1287,6 +1292,11 @@
   version "1.8.0"
   resolved "https://registry.npmjs.org/@noble/hashes/-/hashes-1.8.0.tgz"
   integrity sha512-jCs9ldd7NwzpgXDIf6P3+NrHh9/sD6CQdxHyjQI+h/6rDNo88ypBxxz45UDuZHz9r3tNz7N/VInSVoVdtXEI4A==
+
+"@noble/hashes@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@noble/hashes/-/hashes-2.0.1.tgz#fc1a928061d1232b0a52bb754393c37a5216c89e"
+  integrity sha512-XlOlEbQcE9fmuXxrVTXCTlG2nlRXa9Rj3rr5Ue/+tX+nmkgbX720YHh0VR3hBF9xDvwnb8D2shVGOwNx+ulArw==
 
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
@@ -1466,12 +1476,14 @@
   resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-1.0.1.tgz#d21401f1d59ade56a62e139462a97f104ed19a36"
   integrity sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==
 
-"@thesingularitynetwork/darkswap-sdk@^0.1.38":
-  version "0.1.38"
-  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.1.38.tgz#1c7b3aba4dd6dffdc385575c01d1a0473342eef2"
-  integrity sha512-sQTpCF44Swo3XQEYg+pWXH6ZRV24lqSQ6z2gLWqJWAYS9p2IH99d1nCJlPjoaG460ZLQn76X1USQmtJKhUjJSg==
+"@thesingularitynetwork/darkswap-sdk@^0.3.0-beta1":
+  version "0.3.0-beta1"
+  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.3.0-beta1.tgz#b15ed26c4b89fcd6fd4c83c7ce36dcb71e15aa71"
+  integrity sha512-6Bqbx0iTximp0w4zhC2kfbhumL/FuTZ9SPOB4WXUwgcvUJOS11+7KJf5XgUfAeuiKI+Lec8d3PzsOZG7LMy8uw==
   dependencies:
     "@aztec/bb.js" "0.84.0"
+    "@noble/ciphers" "^2.1.1"
+    "@noble/hashes" "^2.0.1"
     "@noir-lang/noir_js" "1.0.0-beta.6"
     "@noir-lang/noir_wasm" "1.0.0-beta.6"
     "@noir-lang/types" "1.0.0-beta.6"

@@ -103,7 +103,9 @@ export class SettlementService {
       { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) },
       bobSwapMessage.address,
       bobSwapMessage,
-      darkSwapContext.signature);
+      darkSwapContext.signature,
+      null
+    );
 
     const notesToAdd = [swapInNote];
     if (changeNote.amount !== 0n) {
