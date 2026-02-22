@@ -41,6 +41,10 @@ export class OrderController {
       }
     }
 
+    if (orderDto.orderType === OrderType.MARKET) {
+      throw new DarkSwapError('Market order is not supported');
+    }
+
     const context = await DarkSwapContext.createDarkSwapContext(orderDto.chainId, orderDto.wallet);
     const mutex = this.walletMutexService.getMutex(context.chainId, context.walletAddress.toLowerCase());
     await mutex.runExclusive(async () => {
