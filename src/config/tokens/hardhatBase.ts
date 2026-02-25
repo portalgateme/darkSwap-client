@@ -1,4 +1,4 @@
-export const hardhatTokens = [
+export const hardhatBaseTokens = [
     {
         "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
         "decimals": 18,
@@ -9,12 +9,12 @@ export const hardhatTokens = [
         "name": "Tether USD",
         "symbol": "USDT",
         "decimals": 6,
-        "address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        "address": "0xfde4C96c8593536E31F229EA8f37b2ADa2699bb2"
     },
     {
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
-        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        "address": "0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"
     }
 ]
