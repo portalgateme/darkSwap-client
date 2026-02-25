@@ -1,6 +1,7 @@
 import { HexData, NetworkConfig } from '../types'
 import { ChainId } from '../types'
 import { hardhatContracts } from './contracts/hardhat'
+import { hardhatBaseContracts } from './contracts/hardhatBase'
 
 const confirmationsConfig: { [chainId: number]: number } = {
   [ChainId.MAINNET]: 12,
@@ -8,7 +9,7 @@ const confirmationsConfig: { [chainId: number]: number } = {
   [ChainId.BASE]: 6,
   [ChainId.SEPOLIA]: 3,
   [ChainId.HARDHAT]: 3,
-  [ChainId.HARDHAT_ARBITRUM]: 3,
+  [ChainId.HARDHAT_BASE]: 3,
 }
 
 const DEFAULT_CONFIRMATIONS = 6;
@@ -56,5 +57,15 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     darkSwapFeeAssetManager: hardhatContracts.darkSwapFeeAssetManager as HexData,
     darkSwapSubgraphUrl:
       'https://app.dev.portalgate.me:8080/subgraphs/name/singularity/'
+  },
+  [ChainId.HARDHAT_BASE]: {
+    priceOracle: '0x0AdDd25a91563696D8567Df78D5A01C9a991F9B8',
+    ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    nativeWrapper: '0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2',
+    merkleTreeOperator: hardhatBaseContracts.merkleTreeOperator as HexData,
+    darkSwapAssetManager: hardhatBaseContracts.darkSwapAssetManager as HexData,
+    darkSwapFeeAssetManager: hardhatBaseContracts.darkSwapFeeAssetManager as HexData,
+    darkSwapSubgraphUrl:
+      'https://app.dev.portalgate.me:48080/subgraphs/name/singularityBase/'
   }
 }
