@@ -32,6 +32,10 @@ export class OrderController {
       }
     }
 
+    if (orderDto.partialAmountIn > orderDto.amountIn) {
+      throw new DarkSwapError('Partial amount in must be less than or equal to amount in');
+    }
+
     if (orderDto.orderType === OrderType.STOP_LOSS_LIMIT
       || orderDto.orderType === OrderType.STOP_LOSS
       || orderDto.orderType === OrderType.TAKE_PROFIT
