@@ -65,7 +65,7 @@ export class SettlementService {
   }
 
   async doAliceMarketSwap(orderInfo: OrderDto, matchedOrderDto: MatchedOrderDto) {
-    const swapMessage = deserializeDarkSwapMarketMessage(matchedOrderDto.aliceSwapMessage);
+    const swapMessage = deserializeDarkSwapMarketMessage(matchedOrderDto.bobSwapMessage);
     const darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
     //check note status
     const rawNote = await this.dbService.getNoteByCommitment(orderInfo.noteCommitment);
