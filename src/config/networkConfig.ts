@@ -1,6 +1,6 @@
 import { HexData, NetworkConfig } from '../types'
 import { ChainId } from '../types'
-import { hardhatContracts } from './contracts/hardhat'
+import hardhatContracts from './contracts/hardhat.json'
 import { hardhatBaseContracts } from './contracts/hardhatBase'
 
 const confirmationsConfig: { [chainId: number]: number } = {
@@ -56,7 +56,7 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     darkSwapAssetManager: hardhatContracts.darkSwapAssetManager as HexData,
     darkSwapFeeAssetManager: hardhatContracts.darkSwapFeeAssetManager as HexData,
     darkSwapSubgraphUrl:
-      'https://app.dev.portalgate.me:8080/subgraphs/name/singularity/'
+      'https://app.dev.portalgate.me:8080/subgraphs/name/darkswap/'
   },
   [ChainId.HARDHAT_BASE]: {
     priceOracle: '0x0AdDd25a91563696D8567Df78D5A01C9a991F9B8',

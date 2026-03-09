@@ -1,3 +1,5 @@
+import hardhatContracts from '../contracts/hardhat.json'
+
 export const hardhatTokens = [
     {
         "address": "0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE",
@@ -9,12 +11,12 @@ export const hardhatTokens = [
         "name": "Tether USD",
         "symbol": "USDT",
         "decimals": 6,
-        "address": "0xdac17f958d2ee523a2206206994597c13d831ec7"
+        "address": hardhatContracts.MockUSDC2
     },
     {
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
-        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+        "address": hardhatContracts.MockUSDC1
     }
 ]
