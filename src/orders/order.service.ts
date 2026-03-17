@@ -88,7 +88,8 @@ export class OrderService {
       inAsset,
       BigInt(orderDto.amountIn),
       currentBalance,
-      darkSwapContext.signature
+      darkSwapContext.signature,
+      null
     );
     this.noteService.addNote(orderNote, darkSwapContext, true);
     if (newBalance.amount > 0n) {
@@ -199,7 +200,8 @@ export class OrderService {
       darkSwapContext.walletAddress,
       noteToProcess,
       currentBalanceNote,
-      darkSwapContext.signature
+      darkSwapContext.signature,
+      null
     );
 
     this.noteService.addNote(newBalance, darkSwapContext, false);
