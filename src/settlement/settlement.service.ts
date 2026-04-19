@@ -1,4 +1,4 @@
-import { calcNullifier, DarkSwapMarketMessage, DarkSwapMessage, DarkSwapNote, DarkSwapOrderNote, deserializeDarkSwapMarketMessage, isAddressEquals, ProMarketSwapService } from '@thesingularitynetwork/darkswap-sdk';
+import { calcNullifier, DarkSwapMarketMessage, DarkSwapMarketPartialOrderMessage, DarkSwapMessage, DarkSwapNote, DarkSwapOrderNote, DarkSwapPartialOrderMessage, deserializeDarkSwapMarketMessage, deserializeDarkSwapMarketPartialOrderMessage, deserializeDarkSwapPartialOrderMessage, isAddressEquals, ProMarketPartialOrderSwapService, ProMarketSwapService, ProPartialOrderSwapService } from '@thesingularitynetwork/darkswap-sdk';
 import { deserializeDarkSwapMessage, getNoteOnChainStatusByPublicKey, getNoteOnChainStatusBySignature, hexlify32, ProSwapService, NoteOnChainStatus, serializeDarkSwapMessage } from '@thesingularitynetwork/darkswap-sdk';
 import { BooknodeService } from '../common/booknode.service';
 import { DarkSwapContext } from '../common/context/darkSwap.context';
@@ -131,11 +131,149 @@ export class SettlementService {
     await this.orderEventService.logOrderStatusChange(orderInfo.orderId, orderInfo.wallet, orderInfo.chainId, OrderStatus.MATCHED);
 
     const matchedOrderDto = await this.booknodeService.getMatchedOrderDetails(orderInfo);
-    if(matchedOrderDto.isMarket) {
+    if (matchedOrderDto.isPartial && matchedOrderDto.isMarket) {
+      await this.doAliceMarketPartialSwap(orderInfo, matchedOrderDto);
+    } else if (matchedOrderDto.isPartial) {
+      await this.doAlicePartialSwap(orderInfo, matchedOrderDto);
+    } else if (matchedOrderDto.isMarket) {
       await this.doAliceMarketSwap(orderInfo, matchedOrderDto);
     } else {
       await this.doAliceNormalSwap(orderInfo, matchedOrderDto);
     }
+  }
+
+  private async checkBobNoteStatusOfPartialOrder(darkSwapContext: DarkSwapContext, darkSwapMessage: DarkSwapPartialOrderMessage) {
+    const onChainStatus = await getNoteOnChainStatusByPublicKey(darkSwapContext.darkSwap, darkSwapMessage.bobOrderNote, darkSwapMessage.bobPublicKey);
+    if (onChainStatus != NoteOnChainStatus.ACTIVE) {
+      throw new DarkSwapException("counter party's note is not valid");
+    }
+  }
+
+  private async checkBobNoteStatusOfMarketPartialOrder(darkSwapContext: DarkSwapContext, darkSwapMessage: DarkSwapMarketPartialOrderMessage) {
+    const onChainStatus = await getNoteOnChainStatusByPublicKey(darkSwapContext.darkSwap, darkSwapMessage.bobOrderNote, darkSwapMessage.bobPublicKey);
+    if (onChainStatus != NoteOnChainStatus.ACTIVE) {
+      throw new DarkSwapException("counter party's note is not valid");
+    }
+  }
+
+  async doAlicePartialSwap(orderInfo: OrderDto, matchedOrderDto: MatchedOrderDto) {
+    const bobSwapMessage = deserializeDarkSwapPartialOrderMessage(matchedOrderDto.bobSwapMessage);
+    const darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
+
+    const rawNote = await this.dbService.getNoteByCommitment(orderInfo.noteCommitment);
+    const orderNote = this.noteDtoToNote(rawNote);
+    const aliceNoteOnChainStatus = await getNoteOnChainStatusBySignature(
+      darkSwapContext.darkSwap,
+      orderNote,
+      darkSwapContext.signature
+    );
+    if (aliceNoteOnChainStatus != NoteOnChainStatus.ACTIVE) {
+      const aliceNullifier = orderInfo.nullifier;
+      const bobNullifier = bobSwapMessage.bobOrderNullifier;
+      const subgraphData = await this.subgraphService.getSwapTxByNullifiers(orderInfo.chainId, aliceNullifier, bobNullifier);
+      if (subgraphData) {
+        console.log('Order settle recovered for ', orderInfo.orderId);
+        const incomingNoteDto = await this.dbService.getNoteByCommitment(BigInt(subgraphData.aliceInNote).toString());
+        const incomingNote = this.noteDtoToNote(incomingNoteDto);
+        const unprocessedNotes = [incomingNote];
+        if (BigInt(subgraphData.aliceChangeNote) !== 0n) {
+          const changeNoteDto = await this.dbService.getNoteByCommitment(BigInt(subgraphData.aliceChangeNote).toString());
+          const changeNote = this.noteDtoToNote(changeNoteDto);
+          unprocessedNotes.push(changeNote);
+        }
+        await this.updateAliceOrderData(orderInfo, { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) }, unprocessedNotes, darkSwapContext, subgraphData.txHash);
+        return;
+      }
+      throw new DarkSwapException(`Order Note ${orderNote.note} is not active and no settlement transaction found`);
+    }
+
+    await this.checkBobNoteStatusOfPartialOrder(darkSwapContext, bobSwapMessage);
+
+    const proPartialSwapService = new ProPartialOrderSwapService(darkSwapContext.relayerDarkSwap);
+    const { context, swapInNote, changeNote } = await proPartialSwapService.prepare(
+      darkSwapContext.walletAddress,
+      { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) },
+      bobSwapMessage.bobOrderNote.address,
+      bobSwapMessage,
+      darkSwapContext.signature,
+      null
+    );
+
+    const notesToAdd = [swapInNote];
+    if (changeNote.amount !== 0n) {
+      notesToAdd.push(changeNote);
+    }
+    this.noteService.addNotes(notesToAdd, darkSwapContext, false);
+    this.dbService.updateOrderIncomingNoteCommitment(orderInfo.orderId, swapInNote.note);
+
+    const tx = await proPartialSwapService.execute(context);
+
+    const receipt = await darkSwapContext.relayerDarkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
+    if (receipt.status !== 1) {
+      throw new DarkSwapException("pro partial swap failed with tx hash " + tx);
+    }
+
+    await this.updateAliceOrderData(orderInfo, { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) }, notesToAdd, darkSwapContext, tx);
+  }
+
+  async doAliceMarketPartialSwap(orderInfo: OrderDto, matchedOrderDto: MatchedOrderDto) {
+    const bobSwapMessage = deserializeDarkSwapMarketPartialOrderMessage(matchedOrderDto.bobSwapMessage);
+    const darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
+
+    const rawNote = await this.dbService.getNoteByCommitment(orderInfo.noteCommitment);
+    const orderNote = this.noteDtoToNote(rawNote);
+    const aliceNoteOnChainStatus = await getNoteOnChainStatusBySignature(
+      darkSwapContext.darkSwap,
+      orderNote,
+      darkSwapContext.signature
+    );
+    if (aliceNoteOnChainStatus != NoteOnChainStatus.ACTIVE) {
+      const aliceNullifier = orderInfo.nullifier;
+      const bobNullifier = hexlify32(calcNullifier(bobSwapMessage.bobOrderNote.rho, bobSwapMessage.bobPublicKey));
+      const subgraphData = await this.subgraphService.getSwapTxByNullifiers(orderInfo.chainId, aliceNullifier, bobNullifier);
+      if (subgraphData) {
+        console.log('Order settle recovered for ', orderInfo.orderId);
+        const incomingNoteDto = await this.dbService.getNoteByCommitment(BigInt(subgraphData.aliceInNote).toString());
+        const incomingNote = this.noteDtoToNote(incomingNoteDto);
+        const unprocessedNotes = [incomingNote];
+        if (BigInt(subgraphData.aliceChangeNote) !== 0n) {
+          const changeNoteDto = await this.dbService.getNoteByCommitment(BigInt(subgraphData.aliceChangeNote).toString());
+          const changeNote = this.noteDtoToNote(changeNoteDto);
+          unprocessedNotes.push(changeNote);
+        }
+        await this.updateAliceOrderData(orderInfo, { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) }, unprocessedNotes, darkSwapContext, subgraphData.txHash);
+        return;
+      }
+      throw new DarkSwapException(`Order Note ${orderNote.note} is not active and no settlement transaction found`);
+    }
+
+    await this.checkBobNoteStatusOfMarketPartialOrder(darkSwapContext, bobSwapMessage);
+
+    const proMarketPartialSwapService = new ProMarketPartialOrderSwapService(darkSwapContext.relayerDarkSwap);
+    const { context, swapInNote, changeNote } = await proMarketPartialSwapService.prepare(
+      darkSwapContext.walletAddress,
+      { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) },
+      bobSwapMessage.bobOrderNote.address,
+      bobSwapMessage,
+      darkSwapContext.signature,
+      null
+    );
+
+    const notesToAdd = [swapInNote];
+    if (changeNote.amount !== 0n) {
+      notesToAdd.push(changeNote);
+    }
+    this.noteService.addNotes(notesToAdd, darkSwapContext, false);
+    this.dbService.updateOrderIncomingNoteCommitment(orderInfo.orderId, swapInNote.note);
+
+    const tx = await proMarketPartialSwapService.execute(context);
+
+    const receipt = await darkSwapContext.relayerDarkSwap.provider.waitForTransaction(tx, getConfirmations(darkSwapContext.chainId));
+    if (receipt.status !== 1) {
+      throw new DarkSwapException("pro market partial swap failed with tx hash " + tx);
+    }
+
+    await this.updateAliceOrderData(orderInfo, { ...orderNote, feeRatio: BigInt(orderInfo.feeRatio) }, notesToAdd, darkSwapContext, tx);
   }
 
   async doAliceNormalSwap(orderInfo: OrderDto, matchedOrderDto: MatchedOrderDto) {

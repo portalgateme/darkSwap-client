@@ -6,6 +6,7 @@ export class MatchedOrderDto {
     orderDirection: number;
     isAlice: boolean;
     isMarket: boolean;
+    isPartial: boolean;
     aliceAmount: bigint;
     aliceMatchedAmount: bigint;
     bobMatchedAmount: bigint;

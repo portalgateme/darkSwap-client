@@ -17,6 +17,7 @@ interface BookNodeMatchedOrder {
     orderDirection: number;
     isAlice: boolean;
     isMarket: boolean;
+    isPartial: boolean;
     matchedPrice: number;
     aliceAmount: string;
     aliceMatchedAmount: string;
@@ -115,6 +116,7 @@ export class BooknodeService {
             orderDirection: bookNodeMathedOrderDetail.orderDirection,
             isAlice: bookNodeMathedOrderDetail.isAlice,
             isMarket: bookNodeMathedOrderDetail.isMarket,
+            isPartial: bookNodeMathedOrderDetail.isPartial ?? false,
             aliceAmount: BigInt(bookNodeMathedOrderDetail.aliceAmount),
             aliceMatchedAmount: BigInt(bookNodeMathedOrderDetail.aliceMatchedAmount),
             bobMatchedAmount: BigInt(bookNodeMathedOrderDetail.bobMatchedAmount),
