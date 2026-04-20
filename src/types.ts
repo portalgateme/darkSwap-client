@@ -21,6 +21,7 @@ export type NetworkConfig = {
     merkleTreeOperator: HexData
     darkSwapAssetManager: HexData
     darkSwapFeeAssetManager: HexData
+    darkSwapPartialAssetManager: HexData
     darkSwapSubgraphUrl: string
 }
 

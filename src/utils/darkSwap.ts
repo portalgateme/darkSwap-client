@@ -26,6 +26,7 @@ export function getDarkSwap(chainId: number, signer: Signer) {
             merkleTreeOperator: networkConfig[chainId].merkleTreeOperator,
             darkSwapAssetManager: networkConfig[chainId].darkSwapAssetManager,
             darkSwapFeeAssetManager: networkConfig[chainId].darkSwapFeeAssetManager,
+            darkSwapPartialAssetManager: networkConfig[chainId].darkSwapPartialAssetManager,
         },
         true
     )
