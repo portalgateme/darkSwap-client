@@ -1,4 +1,4 @@
-import { calcNullifier, DarkSwapMarketMessage, DarkSwapMarketPartialLeftOverOrderMessage, DarkSwapMarketPartialOrderMessage, DarkSwapMessage, DarkSwapNote, DarkSwapOrderNote, DarkSwapPartialOrderMessage, deserializeDarkSwapMarketMessage, deserializeDarkSwapMarketPartialLeftOverOrderMessage, deserializeDarkSwapMarketPartialOrderMessage, deserializeDarkSwapPartialOrderMessage, isAddressEquals, ProMarketPartialLeftOverOrderSwapService, ProMarketPartialOrderSwapService, ProMarketSwapService, ProPartialOrderSwapService, rebuildNote } from '@thesingularitynetwork/darkswap-sdk';
+import { calcNullifier, DarkSwapMarketMessage, DarkSwapMarketPartialLeftOverOrderMessage, DarkSwapMarketPartialOrderMessage, DarkSwapMessage, DarkSwapNote, DarkSwapOrderNote, DarkSwapPartialOrderMessage, deserializeDarkSwapMarketMessage, deserializeDarkSwapMarketPartialLeftOverOrderMessage, deserializeDarkSwapMarketPartialOrderMessage, deserializeDarkSwapPartialOrderMessage, isAddressEquals, ProMarketPartialLeftOverOrderSwapService, ProMarketPartialOrderSwapService, ProMarketSwapService, ProPartialOrderSwapService, rebuildOrderNote } from '@thesingularitynetwork/darkswap-sdk';
 import { deserializeDarkSwapMessage, getNoteOnChainStatusByPublicKey, getNoteOnChainStatusBySignature, hexlify32, ProSwapService, NoteOnChainStatus, serializeDarkSwapMessage } from '@thesingularitynetwork/darkswap-sdk';
 import { BooknodeService } from '../common/booknode.service';
 import { DarkSwapContext } from '../common/context/darkSwap.context';
@@ -288,11 +288,15 @@ export class SettlementService {
     // bobOutNote is SPENT after stage 1. The note Alice consumes in this
     // stage is the leftOverOrderNote (ACTIVE), whose amount equals the
     // original order amount minus whatever was consumed in stage 1.
+    // NOTE: this is an ORDER note (DOMAIN_ORDER_NOTE + feeRatio), so use
+    // rebuildOrderNote — rebuildNote would compute a plain-note commitment
+    // that never matches the on-chain entry.
     const leftOverAmount =
       bobSwapMessage.bobOutNote.amount - bobSwapMessage.bobPartialOutAmount;
-    const leftOverOrderNote = rebuildNote(
+    const leftOverOrderNote = rebuildOrderNote(
       bobSwapMessage.bobLeftOverOrderNote,
       leftOverAmount,
+      bobSwapMessage.bobOutNote.feeRatio,
       bobSwapMessage.bobPublicKey,
     );
     const onChainStatus = await getNoteOnChainStatusByPublicKey(
