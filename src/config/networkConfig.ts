@@ -40,6 +40,16 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     darkSwapPartialAssetManager: '0x0',
     darkSwapSubgraphUrl: 'https://api.goldsky.com/api/public/project_cmgzjxdql005h5np27j8qhmdj/subgraphs/darkswapSepolia/0.0.1/gn'
   },
+  [ChainId.BASE_SEPOLIA]: {
+    priceOracle: '0x0',
+    ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
+    nativeWrapper: '0x0',
+    merkleTreeOperator: '0x4e171C703646A85ba170E283e08285BA876F000e',
+    darkSwapAssetManager: '0x5810E976F7D5E20B53ae15DFf7c22513669322d6',
+    darkSwapFeeAssetManager: '0x516D30Bbf00BcB6E6863231A6749D93f7fB667be',
+    darkSwapPartialAssetManager: '0x98E7683209866f3E4BB2c9071252aC237F57E165',
+    darkSwapSubgraphUrl: 'https://testnet.portalgate.me:28000/subgraphs/name/darkSwap'
+  },
   [ChainId.HORIZEN_TESTNET]: {
     priceOracle: '0x54c375f28ce4B0c2B986D6256E4Bc75d242A8793',
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
