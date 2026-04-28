@@ -45,10 +45,10 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
 
-    merkleTreeOperator: '0xd184b7561CB36Ae269Bf27742343266798106213',
-    darkSwapAssetManager: '0xFB6C93eF0B515d041b0DcDF427657E41DDDB8Da8',
-    darkSwapFeeAssetManager: '0xF4f1D4F28Be82D81135c13D255452B8325B585B0',
-    darkSwapPartialAssetManager: '0x0',
+    merkleTreeOperator: '0xb7c8838c28266879a93B448ce0174F0d2511D751',
+    darkSwapAssetManager: '0x97B34ca30B8E3C6F4bfE953fa80549DD1FbeB659',
+    darkSwapFeeAssetManager: '0x382e514E9863009e849c80A1973A2C35eDF51c75',
+    darkSwapPartialAssetManager: '0x00981a6AF0A36C98069C8fa844F061A57365cd02',
     darkSwapSubgraphUrl: 'https://bb.subgraph.thesingularity.network/subgraphs/name/singularity/'
   },
   [ChainId.HARDHAT]: {
