@@ -34,10 +34,10 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
 
-    merkleTreeOperator: '0x8bA03aeD844102aC14Bd01fe1aE1A8E109321D8B',
-    darkSwapAssetManager: '0x25EbDE3a81D237D614239D87a17d5c819cc04052',
-    darkSwapFeeAssetManager: '0x52630F3F540787fF4184d3CaaCA5d2F6698dB232',
-    darkSwapPartialAssetManager: '0x0',
+    merkleTreeOperator: '0x1A1F1F47Ee71aE3185A5eAd83482B72A7EA02bCF',
+    darkSwapAssetManager: '0x774d8f7DBd5C46c9eC84b37c1FC135C29E12a4cb',
+    darkSwapFeeAssetManager: '0x498566304aE17B5E9C9281d21D7910c5Eb942170',
+    darkSwapPartialAssetManager: '0x0E7118dA523924852546d6a5518e7aCc05aF279F',
     darkSwapSubgraphUrl: 'https://api.goldsky.com/api/public/project_cmgzjxdql005h5np27j8qhmdj/subgraphs/darkswapSepolia/0.0.1/gn'
   },
   [ChainId.BASE_SEPOLIA]: {
