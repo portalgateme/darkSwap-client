@@ -2,6 +2,9 @@ import { HexData, NetworkConfig } from '../types'
 import { ChainId } from '../types'
 import hardhatContracts from './contracts/hardhat.json'
 import { hardhatBaseContracts } from './contracts/hardhatBase'
+import sepolia from './contracts/sepolia.json'
+import baseSepolia from './contracts/baseSepolia.json'
+import horizenTestnet from './contracts/horizenTestnet.json'
 
 const confirmationsConfig: { [chainId: number]: number } = {
   [ChainId.MAINNET]: 12,
@@ -33,32 +36,30 @@ export const networkConfig: { [chainId: number]: NetworkConfig } = {
     priceOracle: '0xd9EF5ef50e746B01f471542B1123a23C2Df3168B',
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
-
-    merkleTreeOperator: '0x1A1F1F47Ee71aE3185A5eAd83482B72A7EA02bCF',
-    darkSwapAssetManager: '0x774d8f7DBd5C46c9eC84b37c1FC135C29E12a4cb',
-    darkSwapFeeAssetManager: '0x498566304aE17B5E9C9281d21D7910c5Eb942170',
-    darkSwapPartialAssetManager: '0x0E7118dA523924852546d6a5518e7aCc05aF279F',
+    merkleTreeOperator: sepolia.merkleTreeOperator as HexData,
+    darkSwapAssetManager: sepolia.darkSwapAssetManager as HexData,
+    darkSwapFeeAssetManager: sepolia.darkSwapFeeAssetManager as HexData,
+    darkSwapPartialAssetManager: sepolia.darkSwapPartialAssetManager as HexData,
     darkSwapSubgraphUrl: 'https://api.goldsky.com/api/public/project_cmgzjxdql005h5np27j8qhmdj/subgraphs/darkswapSepolia/0.0.1/gn'
   },
   [ChainId.BASE_SEPOLIA]: {
     priceOracle: '0x0',
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0x0',
-    merkleTreeOperator: '0x4e171C703646A85ba170E283e08285BA876F000e',
-    darkSwapAssetManager: '0x5810E976F7D5E20B53ae15DFf7c22513669322d6',
-    darkSwapFeeAssetManager: '0x516D30Bbf00BcB6E6863231A6749D93f7fB667be',
-    darkSwapPartialAssetManager: '0x98E7683209866f3E4BB2c9071252aC237F57E165',
+    merkleTreeOperator: baseSepolia.merkleTreeOperator as HexData,
+    darkSwapAssetManager: baseSepolia.darkSwapAssetManager as HexData,
+    darkSwapFeeAssetManager: baseSepolia.darkSwapFeeAssetManager as HexData,
+    darkSwapPartialAssetManager: baseSepolia.darkSwapPartialAssetManager as HexData,
     darkSwapSubgraphUrl: 'https://testnet.portalgate.me:28000/subgraphs/name/darkSwap'
   },
   [ChainId.HORIZEN_TESTNET]: {
     priceOracle: '0x54c375f28ce4B0c2B986D6256E4Bc75d242A8793',
     ethAddress: '0xEeeeeEeeeEeEeeEeEeEeeEEEeeeeEeeeeeeeEEeE',
     nativeWrapper: '0xfFf9976782d46CC05630D1f6eBAb18b2324d6B14',
-
-    merkleTreeOperator: '0xb7c8838c28266879a93B448ce0174F0d2511D751',
-    darkSwapAssetManager: '0x97B34ca30B8E3C6F4bfE953fa80549DD1FbeB659',
-    darkSwapFeeAssetManager: '0x382e514E9863009e849c80A1973A2C35eDF51c75',
-    darkSwapPartialAssetManager: '0x00981a6AF0A36C98069C8fa844F061A57365cd02',
+    merkleTreeOperator: horizenTestnet.merkleTreeOperator as HexData,
+    darkSwapAssetManager: horizenTestnet.darkSwapAssetManager as HexData,
+    darkSwapFeeAssetManager: horizenTestnet.darkSwapFeeAssetManager as HexData,
+    darkSwapPartialAssetManager: horizenTestnet.darkSwapPartialAssetManager as HexData,
     darkSwapSubgraphUrl: 'https://bb.subgraph.thesingularity.network/subgraphs/name/singularity/'
   },
   [ChainId.HARDHAT]: {

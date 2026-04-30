@@ -1476,10 +1476,10 @@
   resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-1.0.1.tgz#d21401f1d59ade56a62e139462a97f104ed19a36"
   integrity sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==
 
-"@thesingularitynetwork/darkswap-sdk@^0.4.0-beta.13":
-  version "0.4.0-beta.13"
-  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.4.0-beta.13.tgz#326c7aae3cfd4fc598a6400201a3b88c5ba0c36e"
-  integrity sha512-xhsU1mLYca+W+0PDaBxEcjepTT1bLeBX4Sf+ElBzjdsDUGTdyl/1dGecITLPk84AgjrxzcTM0dl4FxZ+5ZTJMg==
+"@thesingularitynetwork/darkswap-sdk@^0.4.0-beta.15":
+  version "0.4.0-beta.15"
+  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.4.0-beta.15.tgz#7709f4aa0d3bc19eb0aa7218e61c6f1bf62f58e7"
+  integrity sha512-A10HrV0dM6GGcRVXJ15Lxg903bszWz8dSFWa3LHua/X2ge1Jp1z+IBc9baCevMXVlplqqGnA8C+96msauqyFUA==
   dependencies:
     "@aztec/bb.js" "0.84.0"
     "@noble/ciphers" "^2.1.1"
