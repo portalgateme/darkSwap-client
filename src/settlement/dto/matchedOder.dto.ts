@@ -6,6 +6,10 @@ export class MatchedOrderDto {
     orderDirection: number;
     isAlice: boolean;
     isMarket: boolean;
+    isPartial: boolean;
+    // Set when Bob's taker order is a leftover follow-up child. Alice-side
+    // settlement then routes to ProMarketPartialLeftOverOrderSwapService.
+    isLeftOver: boolean;
     aliceAmount: bigint;
     aliceMatchedAmount: bigint;
     bobMatchedAmount: bigint;

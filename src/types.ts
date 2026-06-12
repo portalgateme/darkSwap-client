@@ -5,7 +5,8 @@ export enum ChainId {
     HARDHAT_BASE = 31339,
     MAINNET = 1,
     SEPOLIA = 11155111,
-    HORIZEN_TESTNET = 845320009,
+    BASE_SEPOLIA = 84532,
+    HORIZEN_TESTNET = 2651420,
     ARBITRUM_ONE = 42161,
     BASE = 8453,
 }
@@ -21,6 +22,7 @@ export type NetworkConfig = {
     merkleTreeOperator: HexData
     darkSwapAssetManager: HexData
     darkSwapFeeAssetManager: HexData
+    darkSwapPartialAssetManager: HexData
     darkSwapSubgraphUrl: string
 }
 

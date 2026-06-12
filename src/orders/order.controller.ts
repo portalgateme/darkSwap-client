@@ -32,7 +32,7 @@ export class OrderController {
       }
     }
 
-    if (orderDto.partialAmountIn > orderDto.amountIn) {
+    if (BigInt(orderDto.partialAmountIn) > BigInt(orderDto.amountIn)) {
       throw new DarkSwapError('Partial amount in must be less than or equal to amount in');
     }
 
