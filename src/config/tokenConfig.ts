@@ -114,5 +114,11 @@ export const tokenConfig: { [key: string]: Token[] } = {
             symbol: 'sgUSDC',
             name: 'sgUSDC',
         },
+        {
+            name: 'OG',
+            symbol: 'OG',
+            decimals: 18,
+            address: '0xCfB1e4166a70FC04D4c2102f8271d08CC36a79Ca',
+        },
     ]
 }
