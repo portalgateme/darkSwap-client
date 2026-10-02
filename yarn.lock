@@ -1506,10 +1506,10 @@
   resolved "https://registry.yarnpkg.com/@stablelib/wipe/-/wipe-1.0.1.tgz#d21401f1d59ade56a62e139462a97f104ed19a36"
   integrity sha512-WfqfX/eXGiAd3RJe4VU2snh/ZPwtSjLG4ynQ/vYzvghTh7dHFcI1wl+nrkWG6lGhukOxOsUHfv8dUXr58D0ayg==
 
-"@thesingularitynetwork/darkswap-sdk@0.5.0-beta.1":
-  version "0.5.0-beta.1"
-  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.5.0-beta.1.tgz#6260080c9ecc97b604492bdc8683aa897601e28b"
-  integrity sha512-V8W4lqeYyhlVUQtsqdQLNhCU+d/bsjRNJjq2P0EH65sNbFpinojdSdXrUBmSxqVzqYBkYOm3O9p7Y4CV5zaFwA==
+"@thesingularitynetwork/darkswap-sdk@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@thesingularitynetwork/darkswap-sdk/-/darkswap-sdk-0.5.0.tgz#d14f6c4ad8cd65d5716b0e1245ded507576560a9"
+  integrity sha512-4mGcbm0VcsyGCCNlzD1BmCSCEBqDk4hqwmljmV3uqDH31iuxB2GUlpWc1H1lXSngchYK7FMMSvHcSGTCS0n9bg==
   dependencies:
     "@aztec/bb.js" "5.2.0"
     "@noble/ciphers" "^2.1.1"
