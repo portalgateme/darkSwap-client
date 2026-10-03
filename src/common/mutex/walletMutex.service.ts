@@ -28,4 +28,12 @@ export class WalletMutexService {
         }
         return this.walletMutex.get(key)!;
     }
+
+    // Runs fn holding the mutexes of all given addresses, acquired in the given order.
+    // Duplicates are taken once: async-mutex is not re-entrant, and a relayer can also be a wallet.
+    public async runExclusive<T>(chainId: number, wallets: string[], fn: () => Promise<T>): Promise<T> {
+        const mutexes = [...new Set(wallets.map((w) => w.toLowerCase()))].map((w) => this.getMutex(chainId, w));
+        const run = (i: number): Promise<T> => i === mutexes.length ? fn() : mutexes[i].runExclusive(() => run(i + 1));
+        return run(0);
+    }
 }

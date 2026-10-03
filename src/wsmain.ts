@@ -61,7 +61,11 @@ async function processMessage(message: QueuedMessage): Promise<void> {
             case EventType.OrderConfirmed:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
                 darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
-                await walletMutexService.getMutex(orderInfo.chainId, darkSwapContext.relayerAddress.toLowerCase()).runExclusive(async () => {
+                // The relayer sends the swap tx, but settlement also spends and joins the WALLET's
+                // notes (join txs are signed by the wallet), so hold the wallet mutex too — otherwise
+                // a concurrent REST withdraw/createOrder reads half-updated notes and double-joins.
+                // Order is always relayer → wallet; nothing acquires wallet → relayer, so no cycle.
+                await walletMutexService.runExclusive(orderInfo.chainId, [darkSwapContext.relayerAddress, orderInfo.wallet], async () => {
                     console.log('Event for order confirmed: ', notificationEvent.orderId);
                     await settlementService.aliceSwap(orderInfo);
                 });
@@ -69,7 +73,7 @@ async function processMessage(message: QueuedMessage): Promise<void> {
             case EventType.OrderSettled:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
                 darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
-                await walletMutexService.getMutex(orderInfo.chainId, darkSwapContext.relayerAddress.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.runExclusive(orderInfo.chainId, [darkSwapContext.relayerAddress, orderInfo.wallet], async () => {
                     console.log('Event for order settled: ', notificationEvent.orderId);
                     await settlementService.bobPostSettlement(orderInfo, notificationEvent.txHash || '');
                 });
@@ -80,7 +84,7 @@ async function processMessage(message: QueuedMessage): Promise<void> {
             case EventType.orderCancelled:
                 orderInfo = await dbService.getOrderByOrderId(notificationEvent.orderId);
                 darkSwapContext = await DarkSwapContext.createDarkSwapContext(orderInfo.chainId, orderInfo.wallet);
-                await walletMutexService.getMutex(orderInfo.chainId, darkSwapContext.relayerAddress.toLowerCase()).runExclusive(async () => {
+                await walletMutexService.runExclusive(orderInfo.chainId, [darkSwapContext.relayerAddress, orderInfo.wallet], async () => {
                     console.log('Event for order cancelled: ', notificationEvent.orderId);
                     await orderService.cancelOrderByNotificaion(orderInfo);
                 });

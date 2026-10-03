@@ -93,7 +93,11 @@ export class NotesJoinService {
 
     const notsSize = finalNotesToJoin.length;
     let result: DarkSwapNote
-    if (notsSize < 2) {
+    if (notsSize === 0) {
+      // every cached note turned out spent on-chain (e.g. joined concurrently): report no balance
+      // instead of returning undefined, so callers fail with "Insufficient funds", not a TypeError
+      result = EMPTY_NOTE;
+    } else if (notsSize < 2) {
       result = finalNotesToJoin[0];
     } else if (notsSize === 2) {
       result = await this.doJoin(finalNotesToJoin, darkSwapContext);
